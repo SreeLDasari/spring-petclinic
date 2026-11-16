@@ -20,6 +20,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
@@ -33,8 +34,6 @@ import org.springframework.samples.petclinic.owner.Pet;
 import org.springframework.samples.petclinic.vet.VetRepository;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Optional;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
@@ -44,7 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 @WebMvcTest(AppointmentController.class)
-@Import(TestClockConfig.class)
+@Import(TestClockConfiguration.class)
 class AppointmentControllerTests {
 
 	@Autowired
@@ -84,10 +83,10 @@ class AppointmentControllerTests {
 
 }
 
-class TestClockConfig {
+class TestClockConfiguration {
 
 	@org.springframework.context.annotation.Bean
-	Clock testClock() {
+	Clock clock() {
 		return Clock.fixed(Instant.parse("2026-01-01T00:00:00Z"), ZoneId.of("UTC"));
 	}
 
