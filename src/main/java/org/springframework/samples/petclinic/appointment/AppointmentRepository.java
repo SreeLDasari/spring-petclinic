@@ -21,6 +21,8 @@ import java.util.Collection;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface AppointmentRepository extends JpaRepository<Appointment, Integer> {
 
@@ -31,5 +33,14 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
 			Collection<AppointmentStatus> statuses);
 
 	List<Appointment> findByPetIdOrderByAppointmentDateDescStartTimeDesc(Integer petId);
+
+	@Query("""
+			select a
+			from Appointment a
+			join fetch a.vet
+			where a.pet.id = :petId
+			order by a.appointmentDate desc, a.startTime desc
+			""")
+	List<Appointment> findByPetIdWithVetOrderByAppointmentDateDescStartTimeDesc(@Param("petId") Integer petId);
 
 }
