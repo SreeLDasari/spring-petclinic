@@ -1,0 +1,79 @@
+/*
+ * Copyright 2026 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.springframework.samples.petclinic.appointment;
+
+import java.time.LocalDate;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.hamcrest.Matchers.containsString;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+class AppointmentControllerTests {
+
+	@Autowired
+	MockMvc mockMvc;
+
+	@Test
+	void initNewAppointmentForm() throws Exception {
+		mockMvc.perform(get("/owners/{ownerId}/pets/{petId}/appointments/new", 1, 1))
+			.andExpect(status().isOk())
+			.andExpect(model().attributeExists("appointmentForm"))
+			.andExpect(view().name("appointments/appointmentForm"));
+	}
+
+	@Test
+	void processNewAppointmentFormValidationErrors() throws Exception {
+		mockMvc.perform(post("/owners/{ownerId}/pets/{petId}/appointments/new", 1, 1))
+			.andExpect(status().isOk())
+			.andExpect(model().attributeHasErrors("appointmentForm"))
+			.andExpect(view().name("appointments/appointmentForm"));
+	}
+
+	@Test
+	void bookAndPreventOverlaps() throws Exception {
+		LocalDate date = LocalDate.now().plusDays(1);
+
+		mockMvc
+			.perform(post("/owners/{ownerId}/pets/{petId}/appointments/new", 1, 1).param("vetId", "1")
+				.param("appointmentDate", date.toString()).param("startTime", "09:00"))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrlPattern("/owners/*"));
+
+		mockMvc
+			.perform(post("/owners/{ownerId}/pets/{petId}/appointments/new", 1, 1).param("vetId", "1")
+				.param("appointmentDate", date.toString()).param("startTime", "09:00"))
+			.andExpect(status().isOk())
+			.andExpect(model().attributeHasGlobalErrorCode("appointmentForm", "conflict"))
+			.andExpect(view().name("appointments/appointmentForm"))
+			.andExpect(model().attributeExists("availableSlots"))
+			.andExpect(model().attribute("org.springframework.validation.BindingResult.appointmentForm",
+					containsString("conflicts")));
+	}
+
+}
