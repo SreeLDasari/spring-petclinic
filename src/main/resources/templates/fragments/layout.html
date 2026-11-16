@@ -1,91 +1,110 @@
 <!DOCTYPE html>
 
-<html th:fragment="layout (template, menu)" xmlns:th="https://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
+<html th:fragment="layout (template, menu)"
+  xmlns:th="https://www.thymeleaf.org"
+  xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
 
 <head>
-
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <link rel="shortcut icon" type="image/x-icon" th:href="@{/resources/images/favicon.png}">
   <title th:text="#{layoutTitle}">PetClinic :: a Spring Framework demonstration</title>
+
   <link th:href="@{/webjars/font-awesome/css/font-awesome.min.css}" rel="stylesheet">
   <link rel="stylesheet" th:href="@{/resources/css/petclinic.css}" />
-
 </head>
 
 <body>
-
   <nav class="navbar navbar-expand-lg navbar-dark" role="navigation">
     <div class="container-fluid">
-      <a class="navbar-brand" th:href="@{/}"><span></span></a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false" aria-label="Toggle navigation">
+      <a class="navbar-brand" th:href="@{/}">
+        <span></span>
+      </a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-navbar"
+        aria-controls="main-navbar" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
+
       <div class="collapse navbar-collapse" id="main-navbar">
 
         <ul class="navbar-nav me-auto mb-2 mb-lg-0" th:remove="all">
-
-          <li th:fragment="menuItem (link,active,title,glyph,text)" th:class="nav-item">
+          <li th:fragment="menuItem (link,active,title,glyph,text)" class="nav-item">
             <a th:class="${active==menu ? 'nav-link active' : 'nav-link'}" th:href="@{__${link}__}" th:title="${title}">
-              <span th:class="'fa fa-'+${glyph}" class="fa fa-home"></span>
+              <span th:class="'fa fa-'+${glyph}" class="fa fa-home" aria-hidden="true"></span>
               <span th:text="${text}">Template</span>
             </a>
           </li>
-
         </ul>
 
-        <ul class="nav navbar-nav me-auto">
-
-          <li th:replace="~{::menuItem ('/','home','home page','home',#{home})}">
-            <span class="fa fa-home" aria-hidden="true"></span>
-            <span th:text="#{home}">Home</span>
-          </li>
-
-          <li th:replace="~{::menuItem ('/owners/find','owners','find owners','search',#{findOwners})}">
-            <span class="fa fa-search" aria-hidden="true"></span>
-            <span th:text="#{findOwners}">Find owners</span>
-          </li>
-
-          <li th:replace="~{::menuItem ('/vets.html','vets','veterinarians','th-list',#{vets})}">
-            <span class="fa fa-th-list" aria-hidden="true"></span>
-            <span th:text="#{vets}">Veterinarians</span>
-          </li>
-
-          <li
-            th:replace="~{::menuItem ('/oups','error','trigger a RuntimeException to see how it is handled','exclamation-triangle',#{error})}">
-            <span class="fa exclamation-triangle" aria-hidden="true"></span>
-            <span th:text="#{error}">Error</span>
-          </li>
-
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li th:replace="~{::menuItem ('/','home','home page','home',#{home})}"></li>
+          <li th:replace="~{::menuItem ('/owners/find','owners','find owners','search',#{findOwners})}"></li>
+          <li th:replace="~{::menuItem ('/vets.html','vets','veterinarians','th-list',#{vets})}"></li>
+          <li th:replace="~{::menuItem ('/oups','error','trigger a RuntimeException to see how it is handled','exclamation-triangle',#{error})}"></li>
         </ul>
 
+        <!-- Auth area (right aligned) -->
         <div class="d-flex align-items-center ms-auto">
+
+          <!-- Using Thymeleaf Security Dialect if available -->
           <div sec:authorize="isAuthenticated()" class="navbar-text me-3">
-            <span class="me-2">
+            <span class="me-3">
+              user:
               <strong sec:authentication="name">user</strong>
             </span>
             <span class="small text-light opacity-75">
-              (<span sec:authentication="authorities">ROLE_USER</span>)
+              role:
+              <span th:with="roles=${#strings.replace(#strings.arrayJoin(#authentication.authorities.![authority], ', '), 'ROLE_', '')}"
+                th:text="${roles}">USER</span>
             </span>
           </div>
 
-          <form sec:authorize="isAuthenticated()" class="d-inline" th:action="@{/logout}" method="post">
+          <form sec:authorize="isAuthenticated()" class="d-inline me-2" th:action="@{/logout}" method="post">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
             <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
           </form>
 
           <a sec:authorize="!isAuthenticated()" class="btn btn-outline-light btn-sm" th:href="@{/login}">Login</a>
+
+          <!-- Fallback when the security dialect is not present (relies on #authentication) -->
+          <th:block sec:authorize="none">
+            <div th:if="${#authentication != null and #authentication.authenticated}" class="navbar-text me-3">
+              <span class="me-3">
+                user:
+                <strong th:text="${#authentication.name}">user</strong>
+              </span>
+              <span class="small text-light opacity-75">
+                role:
+                <span
+                  th:with="roles=${#strings.replace(#strings.arrayJoin(#authentication.authorities.![authority], ', '), 'ROLE_', '')}"
+                  th:text="${roles}">USER</span>
+              </span>
+            </div>
+
+            <form th:if="${#authentication != null and #authentication.authenticated}" class="d-inline me-2"
+              th:action="@{/logout}" method="post">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+              <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+            </form>
+
+            <a th:if="${#authentication == null or !#authentication.authenticated}" class="btn btn-outline-light btn-sm"
+              th:href="@{/login}">Login</a>
+          </th:block>
+
         </div>
 
       </div>
     </div>
   </nav>
+
   <div class="container-fluid">
     <div class="container xd-container">
 
-      <th:block th:insert="${template}" />
+      <div th:replace="${template}"></div>
 
       <br />
       <br />
@@ -93,15 +112,15 @@
         <div class="row">
           <div class="col-12 text-center">
             <img src="../static/images/spring-logo.svg" th:src="@{/resources/images/spring-logo.svg}"
-              alt="VMware Tanzu Logo" class="logo">
+              alt="VMware Tanzu Logo" class="logo" />
           </div>
         </div>
       </div>
+
     </div>
   </div>
 
   <script th:src="@{/webjars/bootstrap/dist/js/bootstrap.bundle.min.js}"></script>
-
 </body>
 
 </html>
