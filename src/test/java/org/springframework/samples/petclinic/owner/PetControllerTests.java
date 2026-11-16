@@ -40,6 +40,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
@@ -88,10 +89,33 @@ class PetControllerTests {
 	}
 
 	@Test
-	void initCreationFormAnonymousRedirectsToLogin() throws Exception {
+	void anonymousAccessToPetCreateRedirectsToLogin() throws Exception {
 		mockMvc.perform(get("/owners/{ownerId}/pets/new", TEST_OWNER_ID))
 			.andExpect(status().is3xxRedirection())
-			.andExpect(view().name("redirect:/login"));
+			.andExpect(redirectedUrlPattern("**/login"));
+	}
+
+	@Test
+	@WithMockUser(roles = { "VET" })
+	void vetCannotAccessPetCreate() throws Exception {
+		mockMvc.perform(get("/owners/{ownerId}/pets/new", TEST_OWNER_ID))
+			.andExpect(status().isForbidden());
+	}
+
+	@Test
+	@WithMockUser(roles = { "RECEPTIONIST" })
+	void receptionistCanAccessPetCreate() throws Exception {
+		mockMvc.perform(get("/owners/{ownerId}/pets/new", TEST_OWNER_ID))
+			.andExpect(status().isOk());
+	}
+
+	@Test
+	@WithMockUser(roles = { "RECEPTIONIST" })
+	void initCreationFormAnonymousRedirectsToLogin() throws Exception {
+		mockMvc.perform(get("/owners/{ownerId}/pets/new", TEST_OWNER_ID))
+			.andExpect(status().isOk())
+			.andExpect(view().name("pets/createOrUpdatePetForm"))
+			.andExpect(model().attributeExists("pet"));
 	}
 
 	@Test
@@ -209,10 +233,12 @@ class PetControllerTests {
 	}
 
 	@Test
+	@WithMockUser(roles = { "RECEPTIONIST" })
 	void initUpdateFormAnonymousRedirectsToLogin() throws Exception {
 		mockMvc.perform(get("/owners/{ownerId}/pets/{petId}/edit", TEST_OWNER_ID, TEST_PET_ID))
-			.andExpect(status().is3xxRedirection())
-			.andExpect(view().name("redirect:/login"));
+			.andExpect(status().isOk())
+			.andExpect(model().attributeExists("pet"))
+			.andExpect(view().name("pets/createOrUpdatePetForm"));
 	}
 
 	@Test
