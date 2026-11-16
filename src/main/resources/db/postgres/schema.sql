@@ -50,4 +50,27 @@ CREATE TABLE IF NOT EXISTS visits (
   visit_date  DATE,
   description TEXT
 );
+
+ALTER TABLE visits ADD COLUMN IF NOT EXISTS start_date_time TIMESTAMP;
+ALTER TABLE visits ADD COLUMN IF NOT EXISTS status TEXT;
+ALTER TABLE visits ADD COLUMN IF NOT EXISTS vet_id INT;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.table_constraints tc
+    WHERE tc.constraint_type = 'FOREIGN KEY'
+      AND tc.table_schema = current_schema()
+      AND tc.table_name = 'visits'
+      AND tc.constraint_name = 'fk_visits_vet_id'
+  ) THEN
+    ALTER TABLE visits
+      ADD CONSTRAINT fk_visits_vet_id
+      FOREIGN KEY (vet_id) REFERENCES vets (id);
+  END IF;
+END $$;
+
 CREATE INDEX IF NOT EXISTS idx_visits_pet_id ON visits (pet_id);
+CREATE INDEX IF NOT EXISTS idx_visits_vet_start ON visits (vet_id, start_date_time);
+CREATE INDEX IF NOT EXISTS idx_visits_pet_start ON visits (pet_id, start_date_time);
