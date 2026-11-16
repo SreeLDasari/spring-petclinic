@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'appointments')}">
+<body>
+
+<h2>Appointments</h2>
+
+<div class="btn-group" role="group" aria-label="Range">
+  <a class="btn btn-default" th:classappend="${range} == 'today' ? ' active'" th:href="@{/appointments(range='today')}">Today</a>
+  <a class="btn btn-default" th:classappend="${range} == 'week' ? ' active'" th:href="@{/appointments(range='week')}">This Week</a>
+</div>
+
+<table class="table table-striped">
+  <thead>
+  <tr>
+    <th>Start</th>
+    <th>Pet</th>
+    <th>Owner</th>
+    <th>Vet</th>
+    <th>Reason</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr th:each="a : ${appointments}">
+    <td th:text="${#temporals.format(a.startDateTime, 'yyyy-MM-dd HH:mm')}">2026-01-01 10:00</td>
+    <td th:text="${a.pet.name}">Pet</td>
+    <td th:text="${a.pet.owner.firstName + ' ' + a.pet.owner.lastName}">Owner</td>
+    <td th:text="${a.vet != null ? a.vet.firstName + ' ' + a.vet.lastName : '(none)'}">Vet</td>
+    <td>
+      <a th:href="@{/owners/{ownerId}(ownerId=${a.pet.owner.id})}" th:text="${a.reason}">Reason</a>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+</body>
+</html>
