@@ -16,12 +16,18 @@
 package org.springframework.samples.petclinic.owner;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.samples.petclinic.model.BaseEntity;
+import org.springframework.samples.petclinic.vet.Vet;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -36,9 +42,33 @@ import jakarta.validation.constraints.Size;
 @Table(name = "visits")
 public class Visit extends BaseEntity {
 
+	/**
+	 * Legacy visit date. Kept for backwards compatibility with existing flows.
+	 */
 	@Column(name = "visit_date")
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	private LocalDate date;
+
+	/**
+	 * Scheduled appointment start date/time. Nullable for legacy visits.
+	 */
+	@Column(name = "start_date_time")
+	@DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
+	private LocalDateTime startDateTime;
+
+	/**
+	 * Appointment status. Nullable for legacy visits. Defaults to {@link VisitStatus#SCHEDULED}.
+	 */
+	@Column(name = "status")
+	@Enumerated(EnumType.STRING)
+	private VisitStatus status;
+
+	/**
+	 * Assigned vet for scheduled appointment. Nullable for legacy visits.
+	 */
+	@ManyToOne
+	@JoinColumn(name = "vet_id")
+	private Vet vet;
 
 	@NotBlank
 	@Size(max = 255)
@@ -49,6 +79,7 @@ public class Visit extends BaseEntity {
 	 */
 	public Visit() {
 		this.date = LocalDate.now().plusDays(1);
+		this.status = VisitStatus.SCHEDULED;
 	}
 
 	public LocalDate getDate() {
@@ -57,6 +88,34 @@ public class Visit extends BaseEntity {
 
 	public void setDate(LocalDate date) {
 		this.date = date;
+	}
+
+	public LocalDateTime getStartDateTime() {
+		return this.startDateTime;
+	}
+
+	public void setStartDateTime(LocalDateTime startDateTime) {
+		this.startDateTime = startDateTime;
+	}
+
+	public VisitStatus getStatus() {
+		return this.status;
+	}
+
+	public void setStatus(VisitStatus status) {
+		this.status = status;
+	}
+
+	public Vet getVet() {
+		return this.vet;
+	}
+
+	public void setVet(Vet vet) {
+		this.vet = vet;
+	}
+
+	public boolean isCancelled() {
+		return this.status == VisitStatus.CANCELLED;
 	}
 
 	public String getDescription() {
