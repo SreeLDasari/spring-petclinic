@@ -55,24 +55,75 @@
           <dt th:text="#{type}">Type</dt>
           <dd th:text="${pet.type}"></dd>
         </dl>
+        <div class="mt-2">
+          <a th:href="@{__${owner.id}__/pets/__${pet.id}__/edit}" th:text="#{editPet}">Edit Pet</a>
+          &nbsp;|&nbsp;
+          <a th:href="@{__${owner.id}__/pets/__${pet.id}__/visits/new}" th:text="#{addVisit}">Add Visit</a>
+        </div>
       </td>
+
       <td valign="top">
-        <table class="table-condensed">
+        <h4 class="mb-2" th:text="#{visits}">Visits</h4>
+        <table class="table table-condensed">
           <thead>
             <tr>
               <th th:text="#{visitDate}">Visit Date</th>
               <th th:text="#{description}">Description</th>
             </tr>
           </thead>
-          <tr th:each="visit : ${pet.visits}">
-            <td th:text="${#temporals.format(visit.date, 'yyyy-MM-dd')}"></td>
-            <td th:text="${visit?.description}"></td>
-          </tr>
-          <tr>
-            <td><a th:href="@{__${owner.id}__/pets/__${pet.id}__/edit}" th:text="#{editPet}">Edit Pet</a></td>
-            <td><a th:href="@{__${owner.id}__/pets/__${pet.id}__/visits/new}" th:text="#{addVisit}">Add Visit</a></td>
-          </tr>
+          <tbody>
+            <tr th:each="visit : ${pet.visits}">
+              <td th:text="${#temporals.format(visit.date, 'yyyy-MM-dd')}"></td>
+              <td th:text="${visit?.description}"></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(pet.visits)}">
+              <td colspan="2" class="text-muted">No visits</td>
+            </tr>
+          </tbody>
         </table>
+
+        <h4 class="mb-2 mt-3">Appointments</h4>
+        <div class="mb-2">
+          <a class="btn btn-sm btn-primary"
+             th:href="@{/owners/{ownerId}/pets/{petId}/appointments/new(ownerId=${owner.id},petId=${pet.id})}">
+            New Appointment
+          </a>
+        </div>
+
+        <table class="table table-condensed">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Start Time</th>
+              <th>Vet</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="appt : ${petAppointments != null ? petAppointments[pet.id] : null}">
+              <td th:text="${#temporals.format(appt.date, 'yyyy-MM-dd')}"></td>
+              <td th:text="${#temporals.format(appt.startTime, 'HH:mm')}"></td>
+              <td th:text="${appt.vet != null ? appt.vet.firstName + ' ' + appt.vet.lastName : ''}"></td>
+              <td th:text="${appt.status}"></td>
+              <td>
+                <span th:if="${appt.status != null and appt.status.name() == 'BOOKED'}">
+                  <a th:href="@{/owners/{ownerId}/pets/{petId}/appointments/{appointmentId}/reschedule(ownerId=${owner.id},petId=${pet.id},appointmentId=${appt.id})}">
+                    Reschedule
+                  </a>
+                  &nbsp;|&nbsp;
+                  <a th:href="@{/owners/{ownerId}/pets/{petId}/appointments/{appointmentId}/cancel(ownerId=${owner.id},petId=${pet.id},appointmentId=${appt.id})}">
+                    Cancel
+                  </a>
+                </span>
+              </td>
+            </tr>
+            <tr th:if="${petAppointments == null or petAppointments[pet.id] == null or #lists.isEmpty(petAppointments[pet.id])}">
+              <td colspan="5" class="text-muted">No appointments</td>
+            </tr>
+          </tbody>
+        </table>
+
       </td>
     </tr>
 
@@ -81,8 +132,14 @@
     // Function to hide the success and error messages after 3 seconds
     function hideMessages() {
       setTimeout(function () {
-        document.getElementById("success-message").style.display = "none";
-        document.getElementById("error-message").style.display = "none";
+        const success = document.getElementById("success-message");
+        const error = document.getElementById("error-message");
+        if (success) {
+          success.style.display = "none";
+        }
+        if (error) {
+          error.style.display = "none";
+        }
       }, 3000); // 3000 milliseconds (3 seconds)
     }
 
