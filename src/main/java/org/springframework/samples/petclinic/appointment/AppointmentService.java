@@ -58,6 +58,10 @@ public class AppointmentService {
 				AppointmentStatus.SCHEDULED, startInclusive, endExclusive);
 	}
 
+	public Optional<Appointment> findById(Integer appointmentId) {
+		return this.appointmentRepository.findById(appointmentId);
+	}
+
 	@Transactional
 	public Appointment scheduleAppointment(Integer petId, Integer vetId, LocalDateTime startDateTime,
 			int durationMinutes, String reason, String notes) {
