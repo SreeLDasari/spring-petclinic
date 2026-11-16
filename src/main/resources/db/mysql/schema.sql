@@ -47,6 +47,22 @@ CREATE TABLE IF NOT EXISTS pets (
   UNIQUE (owner_id, name)
 ) engine=InnoDB;
 
+CREATE TABLE IF NOT EXISTS appointments (
+  id INT(4) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  pet_id INT(4) UNSIGNED NOT NULL,
+  vet_id INT(4) UNSIGNED,
+  start_date_time DATETIME NOT NULL,
+  duration_minutes INT NOT NULL,
+  reason VARCHAR(255) NOT NULL,
+  notes VARCHAR(2000),
+  status VARCHAR(16) NOT NULL,
+  INDEX(start_date_time),
+  INDEX(pet_id, start_date_time),
+  INDEX(vet_id, start_date_time),
+  FOREIGN KEY (pet_id) REFERENCES pets(id),
+  FOREIGN KEY (vet_id) REFERENCES vets(id)
+) engine=InnoDB;
+
 CREATE TABLE IF NOT EXISTS visits (
   id INT(4) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   pet_id INT(4) UNSIGNED,
