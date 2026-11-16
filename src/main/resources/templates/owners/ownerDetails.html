@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html xmlns:th="https://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'owners')}">
 
 <body>
@@ -17,47 +16,49 @@
   <table class="table table-striped" th:object="${owner}">
     <tr>
       <th th:text="#{name}">Name</th>
-      <td><b th:text="*{firstName + ' ' + lastName}"></b></td>
+      <td><b th:text="*{firstName + ' ' + lastName}">John Doe</b></td>
     </tr>
     <tr>
       <th th:text="#{address}">Address</th>
-      <td th:text="*{address}"></td>
+      <td th:text="*{address}">123 Street</td>
     </tr>
     <tr>
       <th th:text="#{city}">City</th>
-      <td th:text="*{city}"></td>
+      <td th:text="*{city}">City</td>
     </tr>
     <tr>
       <th th:text="#{telephone}">Telephone</th>
-      <td th:text="*{telephone}"></td>
+      <td th:text="*{telephone}">123456</td>
     </tr>
   </table>
 
-  <a th:href="@{__${owner.id}__/edit}" class="btn btn-primary" th:text="#{editOwner}">Edit
-    Owner</a>
-  <a th:href="@{__${owner.id}__/pets/new}" class="btn btn-primary" th:text="#{addNewPet}">Add
-    New Pet</a>
+  <a class="btn btn-primary" th:href="@{/owners/{ownerId}/edit(ownerId=${owner.id})}" th:text="#{editOwner}">
+    Edit Owner
+  </a>
+  <a class="btn btn-primary" th:href="@{/owners/{ownerId}/pets/new(ownerId=${owner.id})}" th:text="#{addNewPet}">
+    Add New Pet
+  </a>
 
   <br />
   <br />
   <br />
+
   <h2 th:text="#{petsAndVisits}">Pets and Visits</h2>
 
   <table class="table table-striped">
-
     <tr th:each="pet : ${owner.pets}">
       <td valign="top">
         <dl class="dl-horizontal">
           <dt th:text="#{name}">Name</dt>
-          <dd th:text="${pet.name}"></dd>
+          <dd th:text="${pet.name}">Lucky</dd>
           <dt th:text="#{birthDate}">Birth Date</dt>
-          <dd th:text="${#temporals.format(pet.birthDate, 'yyyy-MM-dd')}"></dd>
+          <dd th:text="${#temporals.format(pet.birthDate, 'yyyy-MM-dd')}">2010-09-07</dd>
           <dt th:text="#{type}">Type</dt>
-          <dd th:text="${pet.type}"></dd>
+          <dd th:text="${pet.type}">dog</dd>
         </dl>
       </td>
       <td valign="top">
-        <table class="table-condensed">
+        <table class="table table-condensed">
           <thead>
             <tr>
               <th th:text="#{visitDate}">Visit Date</th>
@@ -65,45 +66,51 @@
               <th></th>
             </tr>
           </thead>
-          <tr th:each="visit : ${pet.visits}">
-            <td th:text="${#temporals.format(visit.date, 'yyyy-MM-dd')}"></td>
-            <td th:text="${visit?.description}"></td>
-            <td></td>
-          </tr>
-          <tr>
-            <td>
-              <a th:href="@{__${owner.id}__/pets/__${pet.id}__/edit}" th:text="#{editPet}">Edit Pet</a>
-            </td>
-            <td>
-              <a th:href="@{__${owner.id}__/pets/__${pet.id}__/visits/new}" th:text="#{addVisit}">Add Visit</a>
-            </td>
-            <td>
-              <a th:href="@{__${owner.id}__/pets/__${pet.id}__/appointments/new}">Schedule Appointment</a>
-            </td>
-          </tr>
+          <tbody>
+            <tr th:each="visit : ${pet.visits}">
+              <td th:text="${#temporals.format(visit.date, 'yyyy-MM-dd')}">2013-01-01</td>
+              <td th:text="${visit.description}">rabies shot</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>
+                <a th:href="@{/owners/{ownerId}/pets/{petId}/edit(ownerId=${owner.id},petId=${pet.id})}"
+                  th:text="#{editPet}">Edit Pet</a>
+              </td>
+              <td>
+                <a th:href="@{/owners/{ownerId}/pets/{petId}/visits/new(ownerId=${owner.id},petId=${pet.id})}"
+                  th:text="#{addVisit}">Add Visit</a>
+              </td>
+              <td>
+                <a th:href="@{/owners/{ownerId}/pets/{petId}/appointments/new(ownerId=${owner.id},petId=${pet.id})}">
+                  Schedule Appointment
+                </a>
+              </td>
+            </tr>
+          </tbody>
         </table>
       </td>
     </tr>
-
   </table>
+
   <script>
-    // Function to hide the success and error messages after 3 seconds
-    function hideMessages() {
-      setTimeout(function () {
-        var successMessage = document.getElementById("success-message");
-        var errorMessage = document.getElementById("error-message");
+    (function () {
+      function hideMessages() {
+        setTimeout(function () {
+          var successMessage = document.getElementById("success-message");
+          var errorMessage = document.getElementById("error-message");
 
-        if (successMessage) {
-          successMessage.style.display = "none";
-        }
-        if (errorMessage) {
-          errorMessage.style.display = "none";
-        }
-      }, 3000); // 3000 milliseconds (3 seconds)
-    }
+          if (successMessage) {
+            successMessage.style.display = "none";
+          }
+          if (errorMessage) {
+            errorMessage.style.display = "none";
+          }
+        }, 3000);
+      }
 
-    // Call the function to hide messages
-    hideMessages();
+      hideMessages();
+    })();
   </script>
 
 </body>
