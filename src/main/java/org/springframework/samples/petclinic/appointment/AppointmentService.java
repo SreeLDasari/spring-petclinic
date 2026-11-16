@@ -69,16 +69,26 @@ public class AppointmentService {
 			return List.of();
 		}
 
+		LocalDate today = LocalDate.now(this.clock);
+		if (date.isBefore(today)) {
+			return List.of();
+		}
+
 		List<Appointment> booked = this.appointmentRepository.findByVetIdAndAppointmentDateAndStatusIn(vetId, date,
 				EnumSet.of(AppointmentStatus.BOOKED));
+
+		LocalTime now = LocalTime.now(this.clock);
 
 		List<LocalTime> slots = new ArrayList<>();
 		LocalTime slot = this.clinicStart;
 		while (!slot.plusMinutes(this.slotMinutes).isAfter(this.clinicEnd)) {
 			LocalTime slotEnd = slot.plusMinutes(this.slotMinutes);
+
+			boolean isPastToday = date.isEqual(today) && !slot.isAfter(now);
 			boolean overlaps = booked.stream()
 					.anyMatch(a -> overlaps(slot, slotEnd, a.getStartTime(), a.getEndTime()));
-			if (!overlaps) {
+
+			if (!isPastToday && !overlaps) {
 				slots.add(slot);
 			}
 			slot = slot.plusMinutes(this.slotMinutes);
@@ -113,10 +123,19 @@ public class AppointmentService {
 		return this.appointmentRepository.save(appointment);
 	}
 
+	@Transactional(readOnly = true)
+	public Appointment getAppointment(int appointmentId) {
+		return this.appointmentRepository.findById(appointmentId)
+				.orElseThrow(() -> new AppointmentNotFoundException(appointmentId));
+	}
+
 	@Transactional
 	public Appointment reschedule(Integer appointmentId, LocalDate newDate, LocalTime newStartTime) {
-		Appointment appointment = this.appointmentRepository.findById(appointmentId)
-				.orElseThrow(() -> new AppointmentNotFoundException(appointmentId));
+		if (newDate == null || newStartTime == null) {
+			throw new IllegalArgumentException("New appointment date and start time are required.");
+		}
+
+		Appointment appointment = getAppointment(appointmentId);
 
 		if (appointment.getStatus() != AppointmentStatus.BOOKED) {
 			return appointment;
@@ -141,7 +160,7 @@ public class AppointmentService {
 
 	private void validateFuture(LocalDate date, LocalTime startTime) {
 		if (date == null || startTime == null) {
-			return;
+			throw new IllegalArgumentException("Appointment date and start time are required.");
 		}
 
 		LocalDate today = LocalDate.now(this.clock);
