@@ -44,8 +44,7 @@ class SecurityConfiguration {
 				.requestMatchers("/", "/oups", "/login").permitAll()
 				// Static resources
 				.requestMatchers("/webjars/**", "/resources/**", "/static/**", "/css/**", "/js/**", "/images/**",
-						"/resources/css/**", "/resources/images/**", "/resources/js/**", "/resources/images/**",
-						"/resources/js/**").permitAll()
+						"/resources/css/**", "/resources/images/**", "/resources/js/**").permitAll()
 				// Vets list is read-only (HTML + JSON)
 				.requestMatchers(HttpMethod.GET, "/vets", "/vets.html").permitAll()
 				// Owner read-only pages require authentication (both roles)
