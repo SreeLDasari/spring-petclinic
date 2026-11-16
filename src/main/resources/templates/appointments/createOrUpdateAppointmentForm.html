@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout (~{::body},'owners')}">
+
+<body>
+	<h2 th:text="${formMode == 'edit'} ? 'Reschedule Appointment' : 'Schedule Appointment'"></h2>
+
+	<table class="table table-striped">
+		<tr>
+			<th>Owner</th>
+			<td th:text="${owner.firstName + ' ' + owner.lastName}"></td>
+		</tr>
+		<tr>
+			<th>Pet</th>
+			<td th:text="${pet.name}"></td>
+		</tr>
+	</table>
+
+	<form class="form-horizontal" th:object="${appointmentForm}"
+		th:action="${formMode == 'edit'} ? @{/appointments/{appointmentId}(appointmentId=${appointment.id})} : @{/owners/{ownerId}/pets/{petId}/appointments(ownerId=${owner.id},petId=${pet.id})}"
+		method="post">
+
+		<div class="form-group has-feedback" th:classappend="${#fields.hasErrors('vetId')}? 'has-error'">
+			<label class="col-sm-2 control-label" for="vetId">Vet</label>
+			<div class="col-sm-10">
+				<select class="form-control" id="vetId" th:field="*{vetId}">
+					<option value="" th:text="'-- Select Vet --'"></option>
+					<option th:each="vet : ${vets}" th:value="${vet.id}"
+						th:text="${vet.firstName + ' ' + vet.lastName}"></option>
+				</select>
+				<span class="help-inline" th:errors="*{vetId}">Vet error</span>
+			</div>
+		</div>
+
+		<div class="form-group has-feedback" th:classappend="${#fields.hasErrors('date')}? 'has-error'">
+			<label class="col-sm-2 control-label" for="date">Date</label>
+			<div class="col-sm-10">
+				<input class="form-control" id="date" type="date" th:field="*{date}" />
+				<span class="help-inline" th:errors="*{date}">Date error</span>
+			</div>
+		</div>
+
+		<div class="form-group has-feedback" th:classappend="${#fields.hasErrors('time')}? 'has-error'">
+			<label class="col-sm-2 control-label" for="time">Time</label>
+			<div class="col-sm-10">
+				<input class="form-control" id="time" type="time" th:field="*{time}" />
+				<span class="help-inline" th:errors="*{time}">Time error</span>
+			</div>
+		</div>
+
+		<div class="alert alert-danger" role="alert" th:if="${#fields.hasGlobalErrors()}">
+			<p th:each="err : ${#fields.globalErrors()}" th:text="${err}"></p>
+		</div>
+
+		<div class="form-group">
+			<div class="col-sm-offset-2 col-sm-10">
+				<button class="btn btn-primary" type="submit"
+					th:text="${formMode == 'edit'} ? 'Save Changes' : 'Save Appointment'"></button>
+				<a class="btn btn-default" th:href="@{/owners/{ownerId}(ownerId=${owner.id})}">Cancel</a>
+			</div>
+		</div>
+	</form>
+</body>
+
+</html>
