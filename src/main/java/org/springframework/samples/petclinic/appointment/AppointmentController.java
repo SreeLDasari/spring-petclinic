@@ -19,7 +19,6 @@ package org.springframework.samples.petclinic.appointment;
 import java.time.Clock;
 import java.time.LocalDateTime;
 
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.samples.petclinic.owner.Owner;
 import org.springframework.samples.petclinic.owner.OwnerRepository;
 import org.springframework.samples.petclinic.owner.Pet;
@@ -33,6 +32,7 @@ import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import jakarta.validation.Valid;
@@ -129,7 +129,7 @@ class AppointmentController {
 
 	@PostMapping("/{appointmentId}/complete")
 	String processCompleteAppointmentForm(@PathVariable("appointmentId") int appointmentId,
-			@ModelAttribute("notes") String notes, Model model) {
+			@RequestParam("notes") String notes, Model model) {
 		try {
 			this.appointmentService.completeAppointment(appointmentId, notes);
 		}
