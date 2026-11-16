@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'appointments')}">
+<body>
+
+<h2>Complete Appointment</h2>
+
+<div th:if="${completeError}" class="alert alert-danger" role="alert" aria-live="polite">
+  <p th:text="${completeError}">Only past appointments can be completed</p>
+</div>
+
+<div class="panel panel-default">
+  <div class="panel-heading">Appointment</div>
+  <div class="panel-body">
+    <p><strong>Pet:</strong> <span th:text="${appointment.pet.name}">Pet</span></p>
+    <p><strong>Start:</strong> <span th:text="${#temporals.format(appointment.startDateTime, 'yyyy-MM-dd HH:mm')}">Start</span></p>
+    <p><strong>Reason:</strong> <span th:text="${appointment.reason}">Reason</span></p>
+  </div>
+</div>
+
+<form method="post" th:action="@{/owners/{ownerId}/pets/{petId}/appointments/{appointmentId}/complete(ownerId=${appointment.pet.owner.id},petId=${appointment.pet.id},appointmentId=${appointment.id})}">
+  <div class="form-group">
+    <label for="notes">Notes</label>
+    <textarea id="notes" name="notes" class="form-control" th:text="${appointment.notes}"></textarea>
+  </div>
+
+  <button class="btn btn-primary" type="submit">Mark Completed</button>
+  <a class="btn btn-default" th:href="@{/owners/{ownerId}(ownerId=${appointment.pet.owner.id})}">Back</a>
+</form>
+
+</body>
+</html>
