@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 
-<html xmlns:th="https://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'owners')}">
+<html xmlns:th="https://www.thymeleaf.org"
+  th:replace="~{fragments/layout :: layout (~{::body},'owners')}">
 
 <body>
 
@@ -17,7 +18,9 @@
   <table class="table table-striped" th:object="${owner}">
     <tr>
       <th th:text="#{name}">Name</th>
-      <td><b th:text="*{firstName + ' ' + lastName}">Owner Name</b></td>
+      <td>
+        <b th:text="*{firstName + ' ' + lastName}">Owner Name</b>
+      </td>
     </tr>
     <tr>
       <th th:text="#{address}">Address</th>
@@ -48,14 +51,17 @@
         <dl class="dl-horizontal">
           <dt th:text="#{name}">Name</dt>
           <dd th:text="${pet.name}">Pet Name</dd>
+
           <dt th:text="#{birthDate}">Birth Date</dt>
           <dd th:text="${pet.birthDate != null ? #temporals.format(pet.birthDate, 'yyyy-MM-dd') : ''}">Birth Date</dd>
+
           <dt th:text="#{type}">Type</dt>
           <dd th:text="${pet.type}">Type</dd>
         </dl>
       </td>
 
       <td valign="top">
+
         <table class="table table-condensed">
           <thead>
             <tr>
@@ -97,29 +103,24 @@
               <th>Actions</th>
             </tr>
           </thead>
-          <tbody>
-            <th:block
-              th:with="appointments=${(upcomingAppointmentsByPetId != null and upcomingAppointmentsByPetId[pet.id] != null) ? upcomingAppointmentsByPetId[pet.id] : ((appointmentsByPetId != null and appointmentsByPetId[pet.id] != null) ? appointmentsByPetId[pet.id] : null)}">
+          <tbody th:with="appointments=${(upcomingAppointmentsByPetId != null and upcomingAppointmentsByPetId[pet.id] != null) ? upcomingAppointmentsByPetId[pet.id] : null}">
+            <tr th:if="${appointments == null or #lists.isEmpty(appointments)}">
+              <td colspan="3">No upcoming appointments.</td>
+            </tr>
 
-              <tr th:if="${appointments == null or #lists.isEmpty(appointments)}">
-                <td colspan="3">No upcoming appointments.</td>
-              </tr>
-
-              <tr th:each="appt : ${appointments}">
-                <td th:text="${appt?.dateTime != null ? #temporals.format(appt.dateTime, 'yyyy-MM-dd HH:mm') : (appt?.date != null ? #temporals.format(appt.date, 'yyyy-MM-dd') : '')}">
-                  2020-01-01 10:00
-                </td>
-                <td th:text="${appt?.vetName != null ? appt.vetName : (appt?.vet != null ? appt.vet : '')}">
-                  Vet Name
-                </td>
-                <td>
-                  <a th:href="@{/appointments/{appointmentId}/edit(appointmentId=${appt.id})}">Reschedule</a>
-                  &nbsp;|&nbsp;
-                  <a th:href="@{/appointments/{appointmentId}/cancel(appointmentId=${appt.id})}">Cancel</a>
-                </td>
-              </tr>
-
-            </th:block>
+            <tr th:each="appt : ${appointments}">
+              <td th:text="${appt?.dateTime != null ? #temporals.format(appt.dateTime, 'yyyy-MM-dd HH:mm') : (appt?.date != null ? #temporals.format(appt.date, 'yyyy-MM-dd') : '')}">
+                2020-01-01 10:00
+              </td>
+              <td th:text="${appt?.vetName != null ? appt.vetName : (appt?.vet != null ? appt.vet : '')}">
+                Vet Name
+              </td>
+              <td>
+                <a th:href="@{/appointments/{appointmentId}/edit(appointmentId=${appt.id})}">Reschedule</a>
+                &nbsp;|&nbsp;
+                <a th:href="@{/appointments/{appointmentId}/cancel(appointmentId=${appt.id})}">Cancel</a>
+              </td>
+            </tr>
           </tbody>
         </table>
 
