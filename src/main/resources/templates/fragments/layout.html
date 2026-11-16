@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<html th:fragment="layout (template, menu)" xmlns:th="https://www.thymeleaf.org">
+<html th:fragment="layout (template, menu)" xmlns:th="https://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
 
 <head>
 
@@ -20,10 +20,10 @@
   <nav class="navbar navbar-expand-lg navbar-dark" role="navigation">
     <div class="container-fluid">
       <a class="navbar-brand" th:href="@{/}"><span></span></a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-navbar">
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
-      <div class="collapse navbar-collapse" id="main-navbar" style>
+      <div class="collapse navbar-collapse" id="main-navbar">
 
         <ul class="navbar-nav me-auto mb-2 mb-lg-0" th:remove="all">
 
@@ -60,6 +60,25 @@
           </li>
 
         </ul>
+
+        <div class="d-flex align-items-center ms-auto">
+          <div sec:authorize="isAuthenticated()" class="navbar-text me-3">
+            <span class="me-2">
+              <strong sec:authentication="name">user</strong>
+            </span>
+            <span class="small text-light opacity-75">
+              (<span sec:authentication="authorities">ROLE_USER</span>)
+            </span>
+          </div>
+
+          <form sec:authorize="isAuthenticated()" class="d-inline" th:action="@{/logout}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+          </form>
+
+          <a sec:authorize="!isAuthenticated()" class="btn btn-outline-light btn-sm" th:href="@{/login}">Login</a>
+        </div>
+
       </div>
     </div>
   </nav>
