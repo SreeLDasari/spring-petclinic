@@ -25,7 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.boot.web.servlet.server.Session;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
@@ -51,7 +50,8 @@ class AppointmentFlowIntegrationTests {
 	@Test
 	void ownerDetailsStillLoadsWithAppointmentsTablePresent() {
 		RestTemplate template = new RestTemplate();
-		ResponseEntity<String> result = template.exchange(RequestEntity.get("http://localhost:" + port + "/owners/1").build(),
+		ResponseEntity<String> result = template.exchange(
+				RequestEntity.get("http://localhost:" + port + "/owners/1").build(),
 				String.class);
 		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
 	}
