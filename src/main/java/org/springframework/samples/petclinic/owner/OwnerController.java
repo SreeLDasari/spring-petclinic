@@ -15,6 +15,7 @@
  */
 package org.springframework.samples.petclinic.owner;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -61,9 +62,12 @@ class OwnerController {
 
 	private final AppointmentService appointmentService;
 
-	public OwnerController(OwnerRepository owners, AppointmentService appointmentService) {
+	private final Clock clock;
+
+	public OwnerController(OwnerRepository owners, AppointmentService appointmentService, Clock clock) {
 		this.owners = owners;
 		this.appointmentService = appointmentService;
+		this.clock = clock;
 	}
 
 	@InitBinder
@@ -192,7 +196,7 @@ class OwnerController {
 		Owner owner = optionalOwner.orElseThrow(() -> new IllegalArgumentException(
 				"Owner not found with id: " + ownerId + ". Please ensure the ID is correct "));
 
-		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime now = LocalDateTime.now(this.clock);
 		Map<Integer, List<Appointment>> upcomingAppointmentsByPet = new HashMap<>();
 		Map<Integer, List<Appointment>> appointmentHistoryByPet = new HashMap<>();
 
