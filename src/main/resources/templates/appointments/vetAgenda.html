@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+
+<html xmlns:th="https://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'vets')}">
+
+<body>
+
+	<h2>Vet Agenda</h2>
+
+	<form method="get" th:action="@{/vets/{vetId}/agenda(vetId=${vetId})}" class="form-inline">
+		<label for="date">Date</label>
+		<input id="date" type="date" name="date" class="form-control" th:value="${date}" />
+		<button class="btn btn-default" type="submit">View</button>
+	</form>
+
+	<table class="table table-striped" th:if="${appointments != null}">
+		<thead>
+			<tr>
+				<th>Time</th>
+				<th>Pet</th>
+				<th>Reason</th>
+				<th>Status</th>
+				<th>Action</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr th:each="a : ${appointments}">
+				<td th:text="${#temporals.format(a.startDateTime, 'HH:mm')} + '-' + ${#temporals.format(a.endDateTime, 'HH:mm')}">10:00-10:30</td>
+				<td th:text="${a.pet.name}">Pet</td>
+				<td th:text="${a.reason}">Reason</td>
+				<td th:text="${a.status}">SCHEDULED</td>
+				<td>
+					<form th:if="${a.status.name() == 'SCHEDULED'}" method="post"
+						th:action="@{/appointments/{appointmentId}/cancel(appointmentId=${a.id},vetId=${vetId},date=${date})}">
+						<button class="btn btn-warning btn-xs" type="submit">Cancel</button>
+					</form>
+					<span th:if="${a.status.name() != 'SCHEDULED'}">-</span>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+
+</body>
+
+</html>
