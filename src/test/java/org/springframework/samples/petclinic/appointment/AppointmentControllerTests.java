@@ -80,6 +80,8 @@ class AppointmentControllerTests {
 
 		Vet vet = new Vet();
 		vet.setId(VET_ID);
+		vet.setFirstName("James");
+		vet.setLastName("Carter");
 		given(vets.findAll()).willReturn(List.of(vet));
 	}
 
@@ -112,13 +114,22 @@ class AppointmentControllerTests {
 	void processCancelRedirects() throws Exception {
 		Appointment appt = new Appointment();
 		appt.setId(10);
+
 		Owner owner = new Owner();
 		owner.setId(OWNER_ID);
+
 		Pet pet = new Pet();
 		pet.setId(PET_ID);
 		owner.addPet(pet);
+
 		appt.setPet(pet);
-		appt.setVet(new Vet());
+
+		Vet vet = new Vet();
+		vet.setId(VET_ID);
+		vet.setFirstName("James");
+		vet.setLastName("Carter");
+		appt.setVet(vet);
+
 		appt.setAppointmentDateTime(LocalDateTime.parse("2026-01-01T12:00:00"));
 
 		given(appointmentRepository.findById(10)).willReturn(Optional.of(appt));
