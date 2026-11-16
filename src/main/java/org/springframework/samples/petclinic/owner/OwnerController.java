@@ -194,7 +194,7 @@ class OwnerController {
 			Integer petId = pet.getId();
 			if (petId != null) {
 				petAppointments.put(petId, this.appointmentRepository
-					.findByPetIdOrderByAppointmentDateDescStartTimeDesc(petId));
+					.findByPetIdWithVetOrderByAppointmentDateDescStartTimeDesc(petId));
 			}
 		}
 		mav.addObject("petAppointments", petAppointments);
