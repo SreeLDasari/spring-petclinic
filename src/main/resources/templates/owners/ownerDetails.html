@@ -100,7 +100,7 @@
               <th>Actions</th>
             </tr>
           </thead>
-          <tbody th:with="appointments=${petAppointments != null and petAppointments[pet.id] != null ? petAppointments[pet.id] : {}}">
+          <tbody th:with="appointments=${petAppointments != null and petAppointments[pet.id] != null ? petAppointments[pet.id] : T(java.util.Collections).emptyList()}">
             <tr th:each="appt : ${appointments}">
               <td th:text="${#temporals.format(appt.appointmentDate, 'yyyy-MM-dd')}"></td>
               <td th:text="${#temporals.format(appt.startTime, 'HH:mm')}"></td>
