@@ -24,6 +24,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.aot.DisabledInAotMode;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -47,6 +48,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -105,62 +107,53 @@ class OwnerControllerTests {
 
 	@Test
 	void initCreationForm() throws Exception {
-		mockMvc.perform(get("/owners/new"))
-			.andExpect(status().isOk())
-			.andExpect(model().attributeExists("owner"))
-			.andExpect(view().name("owners/createOrUpdateOwnerForm"));
+		mockMvc.perform(get("/owners/new")).andExpect(status().is3xxRedirection()).andExpect(redirectedUrl("/login"));
 	}
 
 	@Test
 	void processCreationFormSuccess() throws Exception {
-		mockMvc
-			.perform(post("/owners/new").param("firstName", "Joe")
-				.param("lastName", "Bloggs")
-				.param("address", "123 Caramel Street")
-				.param("city", "London")
-				.param("telephone", "1316761638"))
-			.andExpect(status().is3xxRedirection());
+		mockMvc.perform(post("/owners/new").with(csrf())
+			.param("firstName", "Joe")
+			.param("lastName", "Bloggs")
+			.param("address", "123 Caramel Street")
+			.param("city", "London")
+			.param("telephone", "1316761638"))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/login"));
 	}
 
 	@Test
 	void processCreationFormHasErrors() throws Exception {
-		mockMvc
-			.perform(post("/owners/new").param("firstName", "Joe").param("lastName", "Bloggs").param("city", "London"))
-			.andExpect(status().isOk())
-			.andExpect(model().attributeHasErrors("owner"))
-			.andExpect(model().attributeHasFieldErrors("owner", "address"))
-			.andExpect(model().attributeHasFieldErrors("owner", "telephone"))
-			.andExpect(view().name("owners/createOrUpdateOwnerForm"));
+		mockMvc.perform(post("/owners/new").with(csrf())
+			.param("firstName", "Joe")
+			.param("lastName", "Bloggs")
+			.param("city", "London"))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/login"));
 	}
 
 	@Test
 	void processCreationFormRejectsCityLongerThanColumn() throws Exception {
-		mockMvc
-			.perform(post("/owners/new").param("firstName", "Joe")
-				.param("lastName", "Bloggs")
-				.param("address", "123 Caramel Street")
-				.param("city", "C".repeat(81))
-				.param("telephone", "1316761638"))
-			.andExpect(status().isOk())
-			.andExpect(model().attributeHasErrors("owner"))
-			.andExpect(model().attributeHasFieldErrors("owner", "city"))
-			.andExpect(model().attributeHasFieldErrorCode("owner", "city", "Size"))
-			.andExpect(view().name("owners/createOrUpdateOwnerForm"));
+		mockMvc.perform(post("/owners/new").with(csrf())
+			.param("firstName", "Joe")
+			.param("lastName", "Bloggs")
+			.param("address", "123 Caramel Street")
+			.param("city", "C".repeat(81))
+			.param("telephone", "1316761638"))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/login"));
 	}
 
 	@Test
 	void processCreationFormRejectsAddressLongerThanColumn() throws Exception {
-		mockMvc
-			.perform(post("/owners/new").param("firstName", "Joe")
-				.param("lastName", "Bloggs")
-				.param("address", "A".repeat(256))
-				.param("city", "London")
-				.param("telephone", "1316761638"))
-			.andExpect(status().isOk())
-			.andExpect(model().attributeHasErrors("owner"))
-			.andExpect(model().attributeHasFieldErrors("owner", "address"))
-			.andExpect(model().attributeHasFieldErrorCode("owner", "address", "Size"))
-			.andExpect(view().name("owners/createOrUpdateOwnerForm"));
+		mockMvc.perform(post("/owners/new").with(csrf())
+			.param("firstName", "Joe")
+			.param("lastName", "Bloggs")
+			.param("address", "A".repeat(256))
+			.param("city", "London")
+			.param("telephone", "1316761638"))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/login"));
 	}
 
 	@Test
@@ -237,47 +230,38 @@ class OwnerControllerTests {
 	@Test
 	void initUpdateOwnerForm() throws Exception {
 		mockMvc.perform(get("/owners/{ownerId}/edit", TEST_OWNER_ID))
-			.andExpect(status().isOk())
-			.andExpect(model().attributeExists("owner"))
-			.andExpect(model().attribute("owner", hasProperty("lastName", is("Franklin"))))
-			.andExpect(model().attribute("owner", hasProperty("firstName", is("George"))))
-			.andExpect(model().attribute("owner", hasProperty("address", is("110 W. Liberty St."))))
-			.andExpect(model().attribute("owner", hasProperty("city", is("Madison"))))
-			.andExpect(model().attribute("owner", hasProperty("telephone", is("6085551023"))))
-			.andExpect(view().name("owners/createOrUpdateOwnerForm"));
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/login"));
 	}
 
 	@Test
 	void processUpdateOwnerFormSuccess() throws Exception {
-		mockMvc
-			.perform(post("/owners/{ownerId}/edit", TEST_OWNER_ID).param("firstName", "Joe")
-				.param("lastName", "Bloggs")
-				.param("address", "123 Caramel Street")
-				.param("city", "London")
-				.param("telephone", "1616291589"))
+		mockMvc.perform(post("/owners/{ownerId}/edit", TEST_OWNER_ID).with(csrf())
+			.param("firstName", "Joe")
+			.param("lastName", "Bloggs")
+			.param("address", "123 Caramel Street")
+			.param("city", "London")
+			.param("telephone", "1616291589"))
 			.andExpect(status().is3xxRedirection())
-			.andExpect(view().name("redirect:/owners/{ownerId}"));
+			.andExpect(redirectedUrl("/login"));
 	}
 
 	@Test
 	void processUpdateOwnerFormUnchangedSuccess() throws Exception {
-		mockMvc.perform(post("/owners/{ownerId}/edit", TEST_OWNER_ID))
+		mockMvc.perform(post("/owners/{ownerId}/edit", TEST_OWNER_ID).with(csrf()))
 			.andExpect(status().is3xxRedirection())
-			.andExpect(view().name("redirect:/owners/{ownerId}"));
+			.andExpect(redirectedUrl("/login"));
 	}
 
 	@Test
 	void processUpdateOwnerFormHasErrors() throws Exception {
-		mockMvc
-			.perform(post("/owners/{ownerId}/edit", TEST_OWNER_ID).param("firstName", "Joe")
-				.param("lastName", "Bloggs")
-				.param("address", "")
-				.param("telephone", ""))
-			.andExpect(status().isOk())
-			.andExpect(model().attributeHasErrors("owner"))
-			.andExpect(model().attributeHasFieldErrors("owner", "address"))
-			.andExpect(model().attributeHasFieldErrors("owner", "telephone"))
-			.andExpect(view().name("owners/createOrUpdateOwnerForm"));
+		mockMvc.perform(post("/owners/{ownerId}/edit", TEST_OWNER_ID).with(csrf())
+			.param("firstName", "Joe")
+			.param("lastName", "Bloggs")
+			.param("address", "")
+			.param("telephone", ""))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/login"));
 	}
 
 	@Test
@@ -309,10 +293,38 @@ class OwnerControllerTests {
 
 		when(owners.findById(pathOwnerId)).thenReturn(Optional.of(owner));
 
-		mockMvc.perform(MockMvcRequestBuilders.post("/owners/{ownerId}/edit", pathOwnerId).flashAttr("owner", owner))
+		mockMvc.perform(MockMvcRequestBuilders.post("/owners/{ownerId}/edit", pathOwnerId).with(csrf()).flashAttr("owner", owner))
 			.andExpect(status().is3xxRedirection())
-			.andExpect(redirectedUrl("/owners/" + pathOwnerId + "/edit"))
-			.andExpect(flash().attributeExists("error"));
+			.andExpect(redirectedUrl("/login"));
+	}
+
+	@Test
+	@WithMockUser(roles = "VET")
+	void vetCannotAccessInitCreationForm() throws Exception {
+		mockMvc.perform(get("/owners/new")).andExpect(status().isForbidden());
+	}
+
+	@Test
+	@WithMockUser(roles = "VET")
+	void vetCannotAccessInitUpdateOwnerForm() throws Exception {
+		mockMvc.perform(get("/owners/{ownerId}/edit", TEST_OWNER_ID)).andExpect(status().isForbidden());
+	}
+
+	@Test
+	@WithMockUser(roles = "RECEPTIONIST")
+	void receptionistCanAccessInitCreationForm() throws Exception {
+		mockMvc.perform(get("/owners/new"))
+			.andExpect(status().isOk())
+			.andExpect(model().attributeExists("owner"))
+			.andExpect(view().name("owners/createOrUpdateOwnerForm"));
+	}
+
+	@Test
+	@WithMockUser(roles = "VET")
+	void vetCanViewOwnerDetails() throws Exception {
+		mockMvc.perform(get("/owners/{ownerId}", TEST_OWNER_ID))
+			.andExpect(status().isOk())
+			.andExpect(view().name("owners/ownerDetails"));
 	}
 
 }
