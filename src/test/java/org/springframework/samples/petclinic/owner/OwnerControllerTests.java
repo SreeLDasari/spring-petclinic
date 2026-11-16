@@ -106,11 +106,27 @@ class OwnerControllerTests {
 	}
 
 	@Test
-	void initCreationForm() throws Exception {
+	void anonymousAccessToOwnerCreateRedirectsToLogin() throws Exception {
 		mockMvc.perform(get("/owners/new")).andExpect(status().is3xxRedirection()).andExpect(redirectedUrl("/login"));
 	}
 
 	@Test
+	@WithMockUser(roles = { "VET" })
+	void vetCannotAccessOwnerCreate() throws Exception {
+		mockMvc.perform(get("/owners/new")).andExpect(status().isForbidden());
+	}
+
+	@Test
+	@WithMockUser(roles = { "RECEPTIONIST" })
+	void initCreationForm() throws Exception {
+		mockMvc.perform(get("/owners/new"))
+			.andExpect(status().isOk())
+			.andExpect(model().attributeExists("owner"))
+			.andExpect(view().name("owners/createOrUpdateOwnerForm"));
+	}
+
+	@Test
+	@WithMockUser(roles = { "RECEPTIONIST" })
 	void processCreationFormSuccess() throws Exception {
 		mockMvc.perform(post("/owners/new").with(csrf())
 			.param("firstName", "Joe")
@@ -119,20 +135,23 @@ class OwnerControllerTests {
 			.param("city", "London")
 			.param("telephone", "1316761638"))
 			.andExpect(status().is3xxRedirection())
-			.andExpect(redirectedUrl("/login"));
+			.andExpect(redirectedUrl("/owners"));
 	}
 
 	@Test
+	@WithMockUser(roles = { "RECEPTIONIST" })
 	void processCreationFormHasErrors() throws Exception {
 		mockMvc.perform(post("/owners/new").with(csrf())
 			.param("firstName", "Joe")
 			.param("lastName", "Bloggs")
 			.param("city", "London"))
-			.andExpect(status().is3xxRedirection())
-			.andExpect(redirectedUrl("/login"));
+			.andExpect(status().isOk())
+			.andExpect(model().attributeHasErrors("owner"))
+			.andExpect(view().name("owners/createOrUpdateOwnerForm"));
 	}
 
 	@Test
+	@WithMockUser(roles = { "RECEPTIONIST" })
 	void processCreationFormRejectsCityLongerThanColumn() throws Exception {
 		mockMvc.perform(post("/owners/new").with(csrf())
 			.param("firstName", "Joe")
@@ -140,11 +159,13 @@ class OwnerControllerTests {
 			.param("address", "123 Caramel Street")
 			.param("city", "C".repeat(81))
 			.param("telephone", "1316761638"))
-			.andExpect(status().is3xxRedirection())
-			.andExpect(redirectedUrl("/login"));
+			.andExpect(status().isOk())
+			.andExpect(model().attributeHasErrors("owner"))
+			.andExpect(view().name("owners/createOrUpdateOwnerForm"));
 	}
 
 	@Test
+	@WithMockUser(roles = { "RECEPTIONIST" })
 	void processCreationFormRejectsAddressLongerThanColumn() throws Exception {
 		mockMvc.perform(post("/owners/new").with(csrf())
 			.param("firstName", "Joe")
@@ -152,11 +173,13 @@ class OwnerControllerTests {
 			.param("address", "A".repeat(256))
 			.param("city", "London")
 			.param("telephone", "1316761638"))
-			.andExpect(status().is3xxRedirection())
-			.andExpect(redirectedUrl("/login"));
+			.andExpect(status().isOk())
+			.andExpect(model().attributeHasErrors("owner"))
+			.andExpect(view().name("owners/createOrUpdateOwnerForm"));
 	}
 
 	@Test
+	@WithMockUser(roles = { "VET" })
 	void initFindForm() throws Exception {
 		mockMvc.perform(get("/owners/find"))
 			.andExpect(status().isOk())
@@ -165,6 +188,7 @@ class OwnerControllerTests {
 	}
 
 	@Test
+	@WithMockUser(roles = { "VET" })
 	void processFindFormSuccess() throws Exception {
 		Page<Owner> tasks = new PageImpl<>(List.of(george(), new Owner()));
 		when(this.owners.findByLastNameStartingWith(anyString(), any(Pageable.class))).thenReturn(tasks);
@@ -172,6 +196,7 @@ class OwnerControllerTests {
 	}
 
 	@Test
+	@WithMockUser(roles = { "VET" })
 	void processFindFormRedirectsOutOfBoundsPageToFirstPage() throws Exception {
 		for (int page : List.of(0, 2)) {
 			mockMvc.perform(get("/owners").param("page", Integer.toString(page)).param("lastName", "Franklin"))
@@ -181,6 +206,7 @@ class OwnerControllerTests {
 	}
 
 	@Test
+	@WithMockUser(roles = { "VET" })
 	void processFindFormByLastName() throws Exception {
 		Page<Owner> tasks = new PageImpl<>(List.of(george()));
 		when(this.owners.findByLastNameStartingWith(eq("Franklin"), any(Pageable.class))).thenReturn(tasks);
@@ -190,6 +216,7 @@ class OwnerControllerTests {
 	}
 
 	@Test
+	@WithMockUser(roles = { "VET" })
 	void processFindFormIgnoresSurroundingWhitespace() throws Exception {
 		Page<Owner> tasks = new PageImpl<>(List.of(george()));
 		when(this.owners.findByLastNameStartingWith(eq("Franklin"), any(Pageable.class))).thenReturn(tasks);
@@ -204,6 +231,7 @@ class OwnerControllerTests {
 	}
 
 	@Test
+	@WithMockUser(roles = { "VET" })
 	void processFindFormWithWhitespaceOnlyLastNameReturnsAllOwners() throws Exception {
 		Page<Owner> tasks = new PageImpl<>(List.of(george(), new Owner()));
 		when(this.owners.findByLastNameStartingWith(eq(""), any(Pageable.class))).thenReturn(tasks);
@@ -216,6 +244,7 @@ class OwnerControllerTests {
 	}
 
 	@Test
+	@WithMockUser(roles = { "VET" })
 	void processFindFormNoOwnersFound() throws Exception {
 		Page<Owner> tasks = new PageImpl<>(List.of());
 		when(this.owners.findByLastNameStartingWith(eq("Unknown Surname"), any(Pageable.class))).thenReturn(tasks);
@@ -228,13 +257,16 @@ class OwnerControllerTests {
 	}
 
 	@Test
+	@WithMockUser(roles = { "RECEPTIONIST" })
 	void initUpdateOwnerForm() throws Exception {
 		mockMvc.perform(get("/owners/{ownerId}/edit", TEST_OWNER_ID))
-			.andExpect(status().is3xxRedirection())
-			.andExpect(redirectedUrl("/login"));
+			.andExpect(status().isOk())
+			.andExpect(model().attributeExists("owner"))
+			.andExpect(view().name("owners/createOrUpdateOwnerForm"));
 	}
 
 	@Test
+	@WithMockUser(roles = { "RECEPTIONIST" })
 	void processUpdateOwnerFormSuccess() throws Exception {
 		mockMvc.perform(post("/owners/{ownerId}/edit", TEST_OWNER_ID).with(csrf())
 			.param("firstName", "Joe")
@@ -243,28 +275,32 @@ class OwnerControllerTests {
 			.param("city", "London")
 			.param("telephone", "1616291589"))
 			.andExpect(status().is3xxRedirection())
-			.andExpect(redirectedUrl("/login"));
+			.andExpect(redirectedUrl("/owners/{ownerId}", TEST_OWNER_ID));
 	}
 
 	@Test
+	@WithMockUser(roles = { "RECEPTIONIST" })
 	void processUpdateOwnerFormUnchangedSuccess() throws Exception {
 		mockMvc.perform(post("/owners/{ownerId}/edit", TEST_OWNER_ID).with(csrf()))
 			.andExpect(status().is3xxRedirection())
-			.andExpect(redirectedUrl("/login"));
+			.andExpect(redirectedUrl("/owners/{ownerId}", TEST_OWNER_ID));
 	}
 
 	@Test
+	@WithMockUser(roles = { "RECEPTIONIST" })
 	void processUpdateOwnerFormHasErrors() throws Exception {
 		mockMvc.perform(post("/owners/{ownerId}/edit", TEST_OWNER_ID).with(csrf())
 			.param("firstName", "Joe")
 			.param("lastName", "Bloggs")
 			.param("address", "")
 			.param("telephone", ""))
-			.andExpect(status().is3xxRedirection())
-			.andExpect(redirectedUrl("/login"));
+			.andExpect(status().isOk())
+			.andExpect(model().attributeHasErrors("owner"))
+			.andExpect(view().name("owners/createOrUpdateOwnerForm"));
 	}
 
 	@Test
+	@WithMockUser(roles = { "VET" })
 	void showOwner() throws Exception {
 		mockMvc.perform(get("/owners/{ownerId}", TEST_OWNER_ID))
 			.andExpect(status().isOk())
@@ -280,6 +316,7 @@ class OwnerControllerTests {
 	}
 
 	@Test
+	@WithMockUser(roles = { "RECEPTIONIST" })
 	void processUpdateOwnerFormWithIdMismatch() throws Exception {
 		int pathOwnerId = 1;
 
@@ -294,8 +331,8 @@ class OwnerControllerTests {
 		when(owners.findById(pathOwnerId)).thenReturn(Optional.of(owner));
 
 		mockMvc.perform(MockMvcRequestBuilders.post("/owners/{ownerId}/edit", pathOwnerId).with(csrf()).flashAttr("owner", owner))
-			.andExpect(status().is3xxRedirection())
-			.andExpect(redirectedUrl("/login"));
+			.andExpect(status().isOk())
+			.andExpect(view().name("owners/createOrUpdateOwnerForm"));
 	}
 
 	@Test
@@ -320,7 +357,7 @@ class OwnerControllerTests {
 	}
 
 	@Test
-	@WithMockUser(roles = "VET")
+	@WithMockUser(roles = { "VET" })
 	void vetCanViewOwnerDetails() throws Exception {
 		mockMvc.perform(get("/owners/{ownerId}", TEST_OWNER_ID))
 			.andExpect(status().isOk())
