@@ -70,6 +70,14 @@ public class Visit extends BaseEntity {
 	@JoinColumn(name = "vet_id")
 	private Vet vet;
 
+	/**
+	 * Associated pet for this visit. This association is read-only to avoid breaking the existing
+	 * Pet aggregate mapping (Pet owns the relationship via its visits collection).
+	 */
+	@ManyToOne
+	@JoinColumn(name = "pet_id", insertable = false, updatable = false)
+	private Pet pet;
+
 	@NotBlank
 	@Size(max = 255)
 	private String description;
@@ -112,6 +120,10 @@ public class Visit extends BaseEntity {
 
 	public void setVet(Vet vet) {
 		this.vet = vet;
+	}
+
+	public Pet getPet() {
+		return this.pet;
 	}
 
 	public boolean isCancelled() {
