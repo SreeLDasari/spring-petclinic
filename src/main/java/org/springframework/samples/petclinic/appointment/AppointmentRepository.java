@@ -17,12 +17,10 @@
 package org.springframework.samples.petclinic.appointment;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 public interface AppointmentRepository extends JpaRepository<Appointment, Integer> {
 
@@ -31,16 +29,10 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
 	List<Appointment> findByStatusAndStartDateTimeBetweenOrderByStartDateTimeAsc(AppointmentStatus status,
 			LocalDateTime rangeStart, LocalDateTime rangeEnd);
 
-	@Query("select a from Appointment a " + "where a.status <> org.springframework.samples.petclinic.appointment.AppointmentStatus.CANCELLED "
-			+ "and a.vet.id = :vetId " + "and a.startDateTime < :proposedEnd "
-			+ "and function('dateadd', 'MINUTE', a.durationMinutes, a.startDateTime) > :proposedStart")
-	Collection<Appointment> findOverlapsForVet(@Param("vetId") Integer vetId,
-			@Param("proposedStart") LocalDateTime proposedStart, @Param("proposedEnd") LocalDateTime proposedEnd);
+	List<Appointment> findByVetIdAndStatusNotAndStartDateTimeLessThanOrderByStartDateTimeAsc(Integer vetId,
+			AppointmentStatus statusToExclude, LocalDateTime proposedEnd);
 
-	@Query("select a from Appointment a " + "where a.status <> org.springframework.samples.petclinic.appointment.AppointmentStatus.CANCELLED "
-			+ "and a.pet.id = :petId " + "and a.startDateTime < :proposedEnd "
-			+ "and function('dateadd', 'MINUTE', a.durationMinutes, a.startDateTime) > :proposedStart")
-	Collection<Appointment> findOverlapsForPet(@Param("petId") Integer petId,
-			@Param("proposedStart") LocalDateTime proposedStart, @Param("proposedEnd") LocalDateTime proposedEnd);
+	List<Appointment> findByPetIdAndStatusNotAndStartDateTimeLessThanOrderByStartDateTimeAsc(Integer petId,
+			AppointmentStatus statusToExclude, LocalDateTime proposedEnd);
 
 }
