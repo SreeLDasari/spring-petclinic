@@ -22,6 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
@@ -69,6 +70,20 @@ class VisitControllerTests {
 	}
 
 	@Test
+	void anonymousAccessToAddVisitRedirectsToLogin() throws Exception {
+		mockMvc.perform(get("/owners/{ownerId}/pets/{petId}/visits/new", TEST_OWNER_ID, TEST_PET_ID))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrlPattern("**/login"));
+	}
+
+	@Test
+	@WithMockUser(roles = { "VET" })
+	void vetCanAccessAddVisitForm() throws Exception {
+		mockMvc.perform(get("/owners/{ownerId}/pets/{petId}/visits/new", TEST_OWNER_ID, TEST_PET_ID))
+			.andExpect(status().isOk());
+	}
+
+	@Test
 	void initNewVisitFormAnonymousRedirectsToLogin() throws Exception {
 		mockMvc.perform(get("/owners/{ownerId}/pets/{petId}/visits/new", TEST_OWNER_ID, TEST_PET_ID))
 			.andExpect(status().is3xxRedirection())
@@ -76,7 +91,7 @@ class VisitControllerTests {
 	}
 
 	@Test
-	@WithMockUser(roles = "VET")
+	@WithMockUser(roles = { "VET" })
 	void initNewVisitForm() throws Exception {
 		mockMvc.perform(get("/owners/{ownerId}/pets/{petId}/visits/new", TEST_OWNER_ID, TEST_PET_ID))
 			.andExpect(status().isOk())
@@ -84,7 +99,7 @@ class VisitControllerTests {
 	}
 
 	@Test
-	@WithMockUser(roles = "VET")
+	@WithMockUser(roles = { "VET" })
 	void processNewVisitFormSuccess() throws Exception {
 		mockMvc
 			.perform(post("/owners/{ownerId}/pets/{petId}/visits/new", TEST_OWNER_ID, TEST_PET_ID)
@@ -97,7 +112,7 @@ class VisitControllerTests {
 	}
 
 	@Test
-	@WithMockUser(roles = "VET")
+	@WithMockUser(roles = { "VET" })
 	void processNewVisitFormHasErrors() throws Exception {
 		mockMvc
 			.perform(post("/owners/{ownerId}/pets/{petId}/visits/new", TEST_OWNER_ID, TEST_PET_ID)
@@ -109,7 +124,7 @@ class VisitControllerTests {
 	}
 
 	@Test
-	@WithMockUser(roles = "VET")
+	@WithMockUser(roles = { "VET" })
 	void processNewVisitFormHasErrorsWhenVisitDateIsNotInFuture() throws Exception {
 		mockMvc
 			.perform(post("/owners/{ownerId}/pets/{petId}/visits/new", TEST_OWNER_ID, TEST_PET_ID)
@@ -124,7 +139,7 @@ class VisitControllerTests {
 	}
 
 	@Test
-	@WithMockUser(roles = "VET")
+	@WithMockUser(roles = { "VET" })
 	void processNewVisitFormHasErrorsWhenDescriptionIsTooLong() throws Exception {
 		mockMvc
 			.perform(post("/owners/{ownerId}/pets/{petId}/visits/new", TEST_OWNER_ID, TEST_PET_ID)
