@@ -15,13 +15,18 @@
  */
 package org.springframework.samples.petclinic.owner;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.samples.petclinic.appointment.Appointment;
+import org.springframework.samples.petclinic.appointment.AppointmentRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -52,8 +57,11 @@ class OwnerController {
 
 	private final OwnerRepository owners;
 
-	public OwnerController(OwnerRepository owners) {
+	private final AppointmentRepository appointmentRepository;
+
+	public OwnerController(OwnerRepository owners, AppointmentRepository appointmentRepository) {
 		this.owners = owners;
+		this.appointmentRepository = appointmentRepository;
 	}
 
 	@InitBinder
@@ -182,6 +190,17 @@ class OwnerController {
 		Owner owner = optionalOwner.orElseThrow(() -> new IllegalArgumentException(
 				"Owner not found with id: " + ownerId + ". Please ensure the ID is correct "));
 		mav.addObject(owner);
+
+		Map<Integer, List<Appointment>> upcomingAppointmentsByPetId = new HashMap<>();
+		LocalDateTime now = LocalDateTime.now();
+		for (Pet pet : owner.getPets()) {
+			if (pet.getId() != null) {
+				upcomingAppointmentsByPetId.put(pet.getId(),
+						this.appointmentRepository.findUpcomingByPetId(pet.getId(), now));
+			}
+		}
+		mav.addObject("upcomingAppointmentsByPetId", upcomingAppointmentsByPetId);
+
 		return mav;
 	}
 
