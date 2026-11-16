@@ -27,6 +27,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.samples.petclinic.owner.Owner;
 import org.springframework.samples.petclinic.owner.OwnerRepository;
@@ -34,18 +35,22 @@ import org.springframework.samples.petclinic.owner.Pet;
 import org.springframework.samples.petclinic.vet.Vet;
 import org.springframework.samples.petclinic.vet.VetRepository;
 import org.springframework.test.context.aot.DisabledInAotMode;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @DisabledInAotMode
+@ExtendWith(MockitoExtension.class)
 class AppointmentServiceTests {
 
-	@MockitoBean
+	@Mock
 	private AppointmentRepository appointmentRepository;
 
-	@MockitoBean
+	@Mock
 	private OwnerRepository owners;
 
-	@MockitoBean
+	@Mock
 	private VetRepository vets;
 
 	private AppointmentService service;
@@ -53,7 +58,7 @@ class AppointmentServiceTests {
 	@BeforeEach
 	void setup() {
 		Clock fixedClock = Clock.fixed(Instant.parse("2026-01-01T10:00:00Z"), ZoneId.of("UTC"));
-		this.service = new AppointmentService(appointmentRepository, owners, vets, fixedClock);
+		this.service = new AppointmentService(this.appointmentRepository, this.owners, this.vets, fixedClock);
 	}
 
 	@Test
@@ -66,12 +71,12 @@ class AppointmentServiceTests {
 		Vet vet = new Vet();
 		vet.setId(2);
 
-		given(owners.findById(1)).willReturn(Optional.of(owner));
-		given(vets.findById(2)).willReturn(Optional.of(vet));
+		given(this.owners.findById(1)).willReturn(Optional.of(owner));
+		given(this.vets.findById(2)).willReturn(Optional.of(vet));
 		LocalDateTime dt = LocalDateTime.parse("2026-01-01T12:00:00");
-		given(appointmentRepository.existsByVetIdAndAppointmentDateTime(2, dt)).willReturn(true);
+		given(this.appointmentRepository.existsByVetIdAndAppointmentDateTime(2, dt)).willReturn(true);
 
-		assertThatThrownBy(() -> service.createAppointment(1, 1, 2, dt))
+		assertThatThrownBy(() -> this.service.createAppointment(1, 1, 2, dt))
 			.isInstanceOf(AppointmentSlotUnavailableException.class);
 	}
 
@@ -85,14 +90,14 @@ class AppointmentServiceTests {
 		Vet vet = new Vet();
 		vet.setId(2);
 
-		given(owners.findById(1)).willReturn(Optional.of(owner));
-		given(vets.findById(2)).willReturn(Optional.of(vet));
+		given(this.owners.findById(1)).willReturn(Optional.of(owner));
+		given(this.vets.findById(2)).willReturn(Optional.of(vet));
 		LocalDateTime dt = LocalDateTime.parse("2026-01-01T12:00:00");
-		given(appointmentRepository.existsByVetIdAndAppointmentDateTime(2, dt)).willReturn(false);
-		given(appointmentRepository.save(org.mockito.ArgumentMatchers.any(Appointment.class)))
+		given(this.appointmentRepository.existsByVetIdAndAppointmentDateTime(2, dt)).willReturn(false);
+		given(this.appointmentRepository.save(ArgumentMatchers.any(Appointment.class)))
 			.willThrow(new DataIntegrityViolationException("unique_vet_appointment_datetime"));
 
-		assertThatThrownBy(() -> service.createAppointment(1, 1, 2, dt))
+		assertThatThrownBy(() -> this.service.createAppointment(1, 1, 2, dt))
 			.isInstanceOf(AppointmentSlotUnavailableException.class);
 	}
 
