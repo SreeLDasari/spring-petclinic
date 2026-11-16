@@ -179,3 +179,29 @@ For additional details, please refer to the blog post [Hello DCO, Goodbye CLA: S
 ## License
 
 The Spring PetClinic sample application is released under version 2.0 of the [Apache License](https://www.apache.org/licenses/LICENSE-2.0).
+
+## Authentication and RBAC (MLG-14)
+
+This project includes form-based authentication with simple role-based access control (RBAC).
+
+### Default in-memory users
+
+The following users are configured out of the box:
+
+- `receptionist` / `receptionist` (ROLE_RECEPTIONIST)
+- `vet` / `vet` (ROLE_VET)
+
+### What each role can do
+
+- **ROLE_RECEPTIONIST**
+  - Manage owners and pets (search, view, create, edit).
+  - Create and manage visits for pets.
+
+- **ROLE_VET**
+  - View pet/owner information as needed for care.
+  - Access vet-facing pages such as viewing vets and working with visits in the context of clinical workflows.
+
+### Public vs protected pages
+
+- The home page and static assets (e.g. CSS/JS/images under `/resources/**`) are publicly accessible.
+- Protected pages require authentication; unauthenticated users are redirected to `/login`.
