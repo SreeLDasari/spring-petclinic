@@ -103,16 +103,16 @@
               <th>Actions</th>
             </tr>
           </thead>
-          <tbody th:with="appointments=${(upcomingAppointmentsByPetId != null and upcomingAppointmentsByPetId[pet.id] != null) ? upcomingAppointmentsByPetId[pet.id] : null}">
+          <tbody th:with="appointments=${(upcomingAppointmentsByPetId != null and upcomingAppointmentsByPetId[__${pet.id}__] != null) ? upcomingAppointmentsByPetId[__${pet.id}__] : null}">
             <tr th:if="${appointments == null or #lists.isEmpty(appointments)}">
               <td colspan="3">No upcoming appointments.</td>
             </tr>
 
             <tr th:each="appt : ${appointments}">
-              <td th:text="${appt?.dateTime != null ? #temporals.format(appt.dateTime, 'yyyy-MM-dd HH:mm') : (appt?.date != null ? #temporals.format(appt.date, 'yyyy-MM-dd') : '')}">
+              <td th:text="${appt?.appointmentDateTime != null ? #temporals.format(appt.appointmentDateTime, 'yyyy-MM-dd HH:mm') : ''}">
                 2020-01-01 10:00
               </td>
-              <td th:text="${appt?.vetName != null ? appt.vetName : (appt?.vet != null ? appt.vet : '')}">
+              <td th:text="${appt?.vet != null ? (appt.vet.firstName + ' ' + appt.vet.lastName) : ''}">
                 Vet Name
               </td>
               <td>
