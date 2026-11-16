@@ -100,25 +100,33 @@
               <th>Actions</th>
             </tr>
           </thead>
-          <tbody>
-            <tr th:each="appt : ${petAppointments != null ? petAppointments[pet.id] : null}">
-              <td th:text="${#temporals.format(appt.date, 'yyyy-MM-dd')}"></td>
+          <tbody th:with="appointments=${petAppointments != null and petAppointments[pet.id] != null ? petAppointments[pet.id] : {}}">
+            <tr th:each="appt : ${appointments}">
+              <td th:text="${#temporals.format(appt.appointmentDate, 'yyyy-MM-dd')}"></td>
               <td th:text="${#temporals.format(appt.startTime, 'HH:mm')}"></td>
               <td th:text="${appt.vet != null ? appt.vet.firstName + ' ' + appt.vet.lastName : ''}"></td>
               <td th:text="${appt.status}"></td>
               <td>
                 <span th:if="${appt.status != null and appt.status.name() == 'BOOKED'}">
-                  <a th:href="@{/owners/{ownerId}/pets/{petId}/appointments/{appointmentId}/reschedule(ownerId=${owner.id},petId=${pet.id},appointmentId=${appt.id})}">
+                  <a th:href="@{/appointments/{appointmentId}/edit(appointmentId=${appt.id})}">
                     Reschedule
                   </a>
                   &nbsp;|&nbsp;
-                  <a th:href="@{/owners/{ownerId}/pets/{petId}/appointments/{appointmentId}/cancel(ownerId=${owner.id},petId=${pet.id},appointmentId=${appt.id})}">
-                    Cancel
-                  </a>
+                  <form th:action="@{/appointments/{appointmentId}/cancel(appointmentId=${appt.id})}"
+                        method="post"
+                        class="d-inline">
+                    <input type="hidden"
+                           th:if="${_csrf != null}"
+                           th:name="${_csrf.parameterName}"
+                           th:value="${_csrf.token}" />
+                    <button type="submit" class="btn btn-link p-0 align-baseline">
+                      Cancel
+                    </button>
+                  </form>
                 </span>
               </td>
             </tr>
-            <tr th:if="${petAppointments == null or petAppointments[pet.id] == null or #lists.isEmpty(petAppointments[pet.id])}">
+            <tr th:if="${#lists.isEmpty(appointments)}">
               <td colspan="5" class="text-muted">No appointments</td>
             </tr>
           </tbody>
