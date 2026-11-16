@@ -103,7 +103,7 @@
               <th>Actions</th>
             </tr>
           </thead>
-          <tbody th:with="appointments=${(upcomingAppointmentsByPetId != null and upcomingAppointmentsByPetId[__${pet.id}__] != null) ? upcomingAppointmentsByPetId[__${pet.id}__] : null}">
+          <tbody th:with="appointments=${upcomingAppointmentsByPetId != null ? upcomingAppointmentsByPetId.get(pet.id) : null}">
             <tr th:if="${appointments == null or #lists.isEmpty(appointments)}">
               <td colspan="3">No upcoming appointments.</td>
             </tr>
