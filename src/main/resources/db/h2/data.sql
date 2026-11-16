@@ -51,3 +51,8 @@ INSERT INTO visits VALUES (default, 7, '2013-01-01', 'rabies shot');
 INSERT INTO visits VALUES (default, 8, '2013-01-02', 'rabies shot');
 INSERT INTO visits VALUES (default, 8, '2013-01-03', 'neutered');
 INSERT INTO visits VALUES (default, 7, '2013-01-04', 'spayed');
+
+-- MLG-22: minimal appointment seed data for manual verification (H2)
+-- Uses fixed timestamps so "future" is always future relative to seed data.
+INSERT INTO appointments VALUES (default, 7, 1, TIMESTAMP '2030-01-01 10:00:00', 30, 'checkup', NULL, 'SCHEDULED');
+INSERT INTO appointments VALUES (default, 7, 1, TIMESTAMP '2009-01-01 09:00:00', 30, 'follow-up', 'all good', 'COMPLETED');
