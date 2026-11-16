@@ -55,8 +55,59 @@
           <dt th:text="#{type}">Type</dt>
           <dd th:text="${pet.type}"></dd>
         </dl>
+
+        <a th:href="@{/owners/{ownerId}/pets/{petId}/appointments/new(ownerId=${owner.id},petId=${pet.id})}"
+           th:text="#{scheduleAppointment}">Schedule Appointment</a>
       </td>
       <td valign="top">
+        <table class="table-condensed">
+          <thead>
+            <tr>
+              <th th:text="#{upcomingAppointments}">Upcoming Appointments</th>
+              <th th:text="#{description}">Description</th>
+              <th th:text="#{status}">Status</th>
+              <th th:text="#{actions}">Actions</th>
+            </tr>
+          </thead>
+          <tr th:each="visit : ${pet.visits}"
+              th:if="${visit.startDateTime != null and visit.status != T(com.ingsoftware.vetclinic.appointment.AppointmentStatus).CANCELLED and visit.startDateTime >= #temporals.createNow()}">
+            <td th:text="${#temporals.format(visit.startDateTime, 'yyyy-MM-dd HH:mm')}"></td>
+            <td th:text="${visit?.description}"></td>
+            <td th:text="${visit.status}"></td>
+            <td>
+              <a th:href="@{/appointments/{id}/edit(id=${visit.id})}" th:text="#{rescheduleAppointment}">Reschedule</a>
+              &nbsp;|&nbsp;
+              <a th:href="@{/appointments/{id}/cancel(id=${visit.id})}" th:text="#{cancelAppointment}">Cancel</a>
+            </td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(#lists.filter(pet.visits, v -> v.startDateTime != null and v.status != T(com.ingsoftware.vetclinic.appointment.AppointmentStatus).CANCELLED and v.startDateTime >= #temporals.createNow()))}">
+            <td colspan="4" th:text="#{noUpcomingAppointments}">No upcoming appointments.</td>
+          </tr>
+        </table>
+
+        <br />
+
+        <table class="table-condensed">
+          <thead>
+            <tr>
+              <th th:text="#{appointmentHistory}">Appointment History</th>
+              <th th:text="#{description}">Description</th>
+              <th th:text="#{status}">Status</th>
+            </tr>
+          </thead>
+          <tr th:each="visit : ${pet.visits}"
+              th:if="${visit.startDateTime != null and (visit.status == T(com.ingsoftware.vetclinic.appointment.AppointmentStatus).CANCELLED or visit.startDateTime < #temporals.createNow())}">
+            <td th:text="${#temporals.format(visit.startDateTime, 'yyyy-MM-dd HH:mm')}"></td>
+            <td th:text="${visit?.description}"></td>
+            <td th:text="${visit.status}"></td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(#lists.filter(pet.visits, v -> v.startDateTime != null and (v.status == T(com.ingsoftware.vetclinic.appointment.AppointmentStatus).CANCELLED or v.startDateTime < #temporals.createNow())))}">
+            <td colspan="3" th:text="#{noAppointmentHistory}">No appointment history.</td>
+          </tr>
+        </table>
+
+        <br />
+
         <table class="table-condensed">
           <thead>
             <tr>
@@ -64,7 +115,7 @@
               <th th:text="#{description}">Description</th>
             </tr>
           </thead>
-          <tr th:each="visit : ${pet.visits}">
+          <tr th:each="visit : ${pet.visits}" th:if="${visit.startDateTime == null}">
             <td th:text="${#temporals.format(visit.date, 'yyyy-MM-dd')}"></td>
             <td th:text="${visit?.description}"></td>
           </tr>
@@ -81,8 +132,14 @@
     // Function to hide the success and error messages after 3 seconds
     function hideMessages() {
       setTimeout(function () {
-        document.getElementById("success-message").style.display = "none";
-        document.getElementById("error-message").style.display = "none";
+        const success = document.getElementById("success-message");
+        if (success) {
+          success.style.display = "none";
+        }
+        const error = document.getElementById("error-message");
+        if (error) {
+          error.style.display = "none";
+        }
       }, 3000); // 3000 milliseconds (3 seconds)
     }
 
