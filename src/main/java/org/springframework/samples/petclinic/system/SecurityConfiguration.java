@@ -44,14 +44,18 @@ class SecurityConfiguration {
 				.requestMatchers("/", "/oups", "/login").permitAll()
 				// Static resources
 				.requestMatchers("/webjars/**", "/resources/**", "/static/**", "/css/**", "/js/**", "/images/**",
-						"/resources/css/**", "/resources/images/**", "/resources/js/**").permitAll()
-				// Vets list is read-only
+						"/resources/css/**", "/resources/images/**", "/resources/js/**", "/resources/images/**",
+						"/resources/js/**").permitAll()
+				// Vets list is read-only (HTML + JSON)
 				.requestMatchers(HttpMethod.GET, "/vets", "/vets.html").permitAll()
+				// Owner read-only pages require authentication (both roles)
+				.requestMatchers(HttpMethod.GET, "/owners/find", "/owners", "/owners/*")
+					.hasAnyRole(ROLE_RECEPTIONIST, ROLE_VET)
 				// Owner write operations (receptionist only)
 				.requestMatchers("/owners/new", "/owners/*/edit").hasRole(ROLE_RECEPTIONIST)
 				// Pet write operations (receptionist only)
 				.requestMatchers("/owners/*/pets/new", "/owners/*/pets/*/edit").hasRole(ROLE_RECEPTIONIST)
-				// Visit creation (vet allowed; receptionist allowed too to avoid breaking existing flow)
+				// Visit creation (vet allowed; receptionist allowed too if needed)
 				.requestMatchers("/owners/*/pets/*/visits/new").hasAnyRole(ROLE_VET, ROLE_RECEPTIONIST)
 				// Any other endpoint requires authentication
 				.anyRequest().authenticated())
@@ -59,8 +63,7 @@ class SecurityConfiguration {
 				.loginPage("/login")
 				.permitAll())
 			.logout(logout -> logout.logoutSuccessUrl("/"))
-			.exceptionHandling(exceptions -> exceptions.accessDeniedPage("/error/403"))
-			.httpBasic(Customizer.withDefaults());
+			.exceptionHandling(exceptions -> exceptions.accessDeniedPage("/error/403"));
 		return http.build();
 	}
 
