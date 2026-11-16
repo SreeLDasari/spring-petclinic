@@ -102,13 +102,16 @@ public class AppointmentController {
 		model.addAttribute("owner", owner);
 		model.addAttribute("pet", pet);
 
-		List<LocalTime> availableSlots = this.appointmentService.getAvailableSlots(form.getVetId(),
-				form.getAppointmentDate());
-		model.addAttribute("availableSlots", availableSlots);
-
 		if (result.hasErrors()) {
+			// Re-populate available slots even when validation fails so the form can be re-rendered properly.
+			model.addAttribute("availableSlots",
+					this.appointmentService.getAvailableSlots(form.getVetId(), form.getAppointmentDate()));
 			return VIEWS_APPOINTMENT_CREATE_FORM;
 		}
+
+		// Populate available slots after validation succeeds as well (in case booking fails and we need to re-render).
+		model.addAttribute("availableSlots",
+				this.appointmentService.getAvailableSlots(form.getVetId(), form.getAppointmentDate()));
 
 		try {
 			Appointment appointment = this.appointmentService.book(ownerId, petId, form.getVetId(),
@@ -129,7 +132,8 @@ public class AppointmentController {
 
 	@GetMapping("/appointments/{appointmentId}/edit")
 	public String initRescheduleForm(@PathVariable("appointmentId") int appointmentId, Model model) {
-		Appointment appointment = this.appointmentService.reschedule(appointmentId, null, null);
+		Appointment appointment = this.appointmentService.getAppointment(appointmentId);
+
 		AppointmentRescheduleForm form = new AppointmentRescheduleForm();
 		form.setAppointmentDate(appointment.getAppointmentDate());
 		form.setStartTime(appointment.getStartTime());
@@ -137,7 +141,7 @@ public class AppointmentController {
 		model.addAttribute("appointment", appointment);
 		model.addAttribute("appointmentRescheduleForm", form);
 		model.addAttribute("availableSlots",
-				this.appointmentService.getAvailableSlots(appointment.getVet().getId(), appointment.getAppointmentDate()));
+				this.appointmentService.getAvailableSlots(appointment.getVet().getId(), form.getAppointmentDate()));
 		return VIEWS_APPOINTMENT_EDIT_FORM;
 	}
 
@@ -146,8 +150,11 @@ public class AppointmentController {
 			@Valid @ModelAttribute("appointmentRescheduleForm") AppointmentRescheduleForm form, BindingResult result,
 			Model model, RedirectAttributes redirectAttributes) {
 
-		Appointment appointment = this.appointmentService.reschedule(appointmentId, null, null);
+		Appointment appointment = this.appointmentService.getAppointment(appointmentId);
 		model.addAttribute("appointment", appointment);
+
+		// Always populate slots based on the appointment's vet and the currently selected date
+		// (so inputs are preserved when validation fails).
 		model.addAttribute("availableSlots",
 				this.appointmentService.getAvailableSlots(appointment.getVet().getId(), form.getAppointmentDate()));
 
