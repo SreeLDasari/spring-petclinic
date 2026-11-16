@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+
+<html xmlns:th="https://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'vets')}">
+
+<body>
+
+  <h2 th:text="#{vetSchedule}">Vet Schedule</h2>
+
+  <form method="get">
+    <div class="form-group">
+      <label for="date" th:text="#{date}">Date</label>
+      <input id="date" class="form-control" type="date" name="date" th:value="${selectedDate}" />
+    </div>
+    <button class="btn btn-primary" type="submit" th:text="#{view}">View</button>
+  </form>
+
+  <h3 th:text="#{scheduleForVetOnDate}">Schedule</h3>
+
+  <table class="table table-striped" th:if="${appointments != null and !appointments.isEmpty()}">
+    <thead>
+      <tr>
+        <th th:text="#{time}">Time</th>
+        <th th:text="#{pet}">Pet</th>
+        <th th:text="#{owner}">Owner</th>
+        <th th:text="#{description}">Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr th:each="a : ${appointments}">
+        <td th:text="${#temporals.format(a.startDateTime, 'HH:mm')}"></td>
+        <td th:text="${a.pet != null ? a.pet.name : ''}"></td>
+        <td th:text="${a.pet != null and a.pet.owner != null ? a.pet.owner.firstName + ' ' + a.pet.owner.lastName : ''}"></td>
+        <td th:text="${a.description}"></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div th:if="${appointments == null or appointments.isEmpty()}" class="alert alert-info" th:text="#{noAppointmentsForDate}">
+    No appointments scheduled for this date.
+  </div>
+
+</body>
+
+</html>

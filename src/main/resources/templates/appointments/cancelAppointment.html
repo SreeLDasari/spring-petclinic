@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+
+<html xmlns:th="https://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'owners')}">
+
+<body>
+
+  <h2 th:text="#{cancelAppointment}">Cancel Appointment</h2>
+
+  <p th:text="#{cancelAppointmentConfirm}">Are you sure?</p>
+
+  <div class="panel panel-default">
+    <div class="panel-body">
+      <p>
+        <strong th:text="#{date}">Date</strong>:
+        <span th:text="${appointment.startDateTime != null ? #temporals.format(appointment.startDateTime, 'yyyy-MM-dd') : ''}"></span>
+      </p>
+      <p>
+        <strong th:text="#{time}">Time</strong>:
+        <span th:text="${appointment.startDateTime != null ? #temporals.format(appointment.startDateTime, 'HH:mm') : ''}"></span>
+      </p>
+      <p>
+        <strong th:text="#{vet}">Vet</strong>:
+        <span th:text="${appointment.vet != null ? appointment.vet.firstName + ' ' + appointment.vet.lastName : ''}"></span>
+      </p>
+      <p>
+        <strong th:text="#{description}">Description</strong>:
+        <span th:text="${appointment.description}"></span>
+      </p>
+    </div>
+  </div>
+
+  <form method="post">
+    <button class="btn btn-danger" type="submit" th:text="#{confirm}">Confirm</button>
+    <a class="btn btn-default" th:href="@{/owners}" th:text="#{cancel}">Cancel</a>
+  </form>
+
+</body>
+
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+
+<html xmlns:th="https://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'owners')}">
+
+<body>
+
+  <h2 th:text="${appointmentId} != null ? #{rescheduleAppointment} : #{scheduleAppointment}">Schedule Appointment</h2>
+
+  <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+    <p th:each="e : ${#fields.globalErrors()}" th:text="${e}"></p>
+  </div>
+
+  <form th:object="${appointmentForm}" method="post">
+
+    <div class="form-group">
+      <label for="vetId" th:text="#{vet}">Vet</label>
+      <select id="vetId" class="form-control" th:field="*{vetId}">
+        <option th:each="v : ${allVets}" th:value="${v.id}" th:text="${v.firstName + ' ' + v.lastName}"></option>
+      </select>
+      <div class="help-block" th:if="${#fields.hasErrors('vetId')}" th:errors="*{vetId}">Error</div>
+    </div>
+
+    <div class="form-group">
+      <label for="date" th:text="#{date}">Date</label>
+      <input id="date" class="form-control" type="date" th:field="*{date}" />
+      <div class="help-block" th:if="${#fields.hasErrors('date')}" th:errors="*{date}">Error</div>
+    </div>
+
+    <div class="form-group">
+      <label for="time" th:text="#{time}">Time</label>
+      <input id="time" class="form-control" type="time" th:field="*{time}" />
+      <div class="help-block" th:if="${#fields.hasErrors('time')}" th:errors="*{time}">Error</div>
+    </div>
+
+    <div class="form-group">
+      <label for="description" th:text="#{reasonNotes}">Reason/Notes</label>
+      <textarea id="description" class="form-control" th:field="*{description}" rows="3"></textarea>
+      <div class="help-block" th:if="${#fields.hasErrors('description')}" th:errors="*{description}">Error</div>
+    </div>
+
+    <div class="form-group">
+      <button class="btn btn-primary" type="submit" th:text="#{saveAppointment}">Save Appointment</button>
+      <a class="btn btn-default" th:href="${owner} != null ? @{/owners/{ownerId}(ownerId=${owner.id})} : @{/owners}" th:text="#{cancel}">Cancel</a>
+    </div>
+
+  </form>
+
+</body>
+
+</html>
