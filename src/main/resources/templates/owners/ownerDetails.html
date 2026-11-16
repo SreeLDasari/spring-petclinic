@@ -62,15 +62,24 @@
             <tr>
               <th th:text="#{visitDate}">Visit Date</th>
               <th th:text="#{description}">Description</th>
+              <th></th>
             </tr>
           </thead>
           <tr th:each="visit : ${pet.visits}">
             <td th:text="${#temporals.format(visit.date, 'yyyy-MM-dd')}"></td>
             <td th:text="${visit?.description}"></td>
+            <td></td>
           </tr>
           <tr>
-            <td><a th:href="@{__${owner.id}__/pets/__${pet.id}__/edit}" th:text="#{editPet}">Edit Pet</a></td>
-            <td><a th:href="@{__${owner.id}__/pets/__${pet.id}__/visits/new}" th:text="#{addVisit}">Add Visit</a></td>
+            <td>
+              <a th:href="@{__${owner.id}__/pets/__${pet.id}__/edit}" th:text="#{editPet}">Edit Pet</a>
+            </td>
+            <td>
+              <a th:href="@{__${owner.id}__/pets/__${pet.id}__/visits/new}" th:text="#{addVisit}">Add Visit</a>
+            </td>
+            <td>
+              <a th:href="@{__${owner.id}__/pets/__${pet.id}__/appointments/new}">Schedule Appointment</a>
+            </td>
           </tr>
         </table>
       </td>
@@ -81,8 +90,15 @@
     // Function to hide the success and error messages after 3 seconds
     function hideMessages() {
       setTimeout(function () {
-        document.getElementById("success-message").style.display = "none";
-        document.getElementById("error-message").style.display = "none";
+        var successMessage = document.getElementById("success-message");
+        var errorMessage = document.getElementById("error-message");
+
+        if (successMessage) {
+          successMessage.style.display = "none";
+        }
+        if (errorMessage) {
+          errorMessage.style.display = "none";
+        }
       }, 3000); // 3000 milliseconds (3 seconds)
     }
 
@@ -91,6 +107,5 @@
   </script>
 
 </body>
-
 
 </html>
