@@ -24,6 +24,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.aot.DisabledInAotMode;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -32,10 +34,9 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.dao.DataIntegrityViolationException;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -87,7 +88,15 @@ class PetControllerTests {
 	}
 
 	@Test
-	void initCreationForm() throws Exception {
+	void initCreationFormAnonymousRedirectsToLogin() throws Exception {
+		mockMvc.perform(get("/owners/{ownerId}/pets/new", TEST_OWNER_ID))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(view().name("redirect:/login"));
+	}
+
+	@Test
+	@WithMockUser(roles = "RECEPTIONIST")
+	void initCreationFormReceptionistOk() throws Exception {
 		mockMvc.perform(get("/owners/{ownerId}/pets/new", TEST_OWNER_ID))
 			.andExpect(status().isOk())
 			.andExpect(view().name("pets/createOrUpdatePetForm"))
@@ -95,9 +104,18 @@ class PetControllerTests {
 	}
 
 	@Test
+	@WithMockUser(roles = "VET")
+	void initCreationFormVetForbidden() throws Exception {
+		mockMvc.perform(get("/owners/{ownerId}/pets/new", TEST_OWNER_ID))
+			.andExpect(status().isForbidden());
+	}
+
+	@Test
+	@WithMockUser(roles = "RECEPTIONIST")
 	void processCreationFormSuccess() throws Exception {
 		mockMvc
-			.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_ID).param("name", "Betty")
+			.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_ID).with(csrf())
+				.param("name", "Betty")
 				.param("type", "hamster")
 				.param("birthDate", "2015-02-12"))
 			.andExpect(status().is3xxRedirection())
@@ -108,9 +126,11 @@ class PetControllerTests {
 	class ProcessCreationFormHasErrors {
 
 		@Test
+		@WithMockUser(roles = "RECEPTIONIST")
 		void processCreationFormWithBlankName() throws Exception {
 			mockMvc
-				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_ID).param("name", "\t \n")
+				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_ID).with(csrf())
+					.param("name", "\t \n")
 					.param("birthDate", "2015-02-12"))
 				.andExpect(model().attributeHasNoErrors("owner"))
 				.andExpect(model().attributeHasErrors("pet"))
@@ -121,9 +141,11 @@ class PetControllerTests {
 		}
 
 		@Test
+		@WithMockUser(roles = "RECEPTIONIST")
 		void processCreationFormWithDuplicateName() throws Exception {
 			mockMvc
-				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_ID).param("name", "petty")
+				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_ID).with(csrf())
+					.param("name", "petty")
 					.param("birthDate", "2015-02-12"))
 				.andExpect(model().attributeHasNoErrors("owner"))
 				.andExpect(model().attributeHasErrors("pet"))
@@ -134,9 +156,11 @@ class PetControllerTests {
 		}
 
 		@Test
+		@WithMockUser(roles = "RECEPTIONIST")
 		void processCreationFormWithMissingPetType() throws Exception {
 			mockMvc
-				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_ID).param("name", "Betty")
+				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_ID).with(csrf())
+					.param("name", "Betty")
 					.param("birthDate", "2015-02-12"))
 				.andExpect(model().attributeHasNoErrors("owner"))
 				.andExpect(model().attributeHasErrors("pet"))
@@ -147,12 +171,14 @@ class PetControllerTests {
 		}
 
 		@Test
+		@WithMockUser(roles = "RECEPTIONIST")
 		void processCreationFormWithInvalidBirthDate() throws Exception {
 			LocalDate currentDate = LocalDate.now();
 			String futureBirthDate = currentDate.plusMonths(1).toString();
 
 			mockMvc
-				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_ID).param("name", "Betty")
+				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_ID).with(csrf())
+					.param("name", "Betty")
 					.param("birthDate", futureBirthDate))
 				.andExpect(model().attributeHasNoErrors("owner"))
 				.andExpect(model().attributeHasErrors("pet"))
@@ -163,11 +189,13 @@ class PetControllerTests {
 		}
 
 		@Test
+		@WithMockUser(roles = "RECEPTIONIST")
 		void processCreationFormWithDataIntegrityViolation() throws Exception {
 			given(owners.saveAndFlush(any(Owner.class)))
 				.willThrow(new DataIntegrityViolationException("Duplicate key: unique_owner_pet_name"));
 			mockMvc
-				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_ID).param("name", "Betty")
+				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_ID).with(csrf())
+					.param("name", "Betty")
 					.param("type", "hamster")
 					.param("birthDate", "2015-02-12"))
 				.andExpect(model().attributeHasNoErrors("owner"))
@@ -178,20 +206,37 @@ class PetControllerTests {
 				.andExpect(view().name("pets/createOrUpdatePetForm"));
 		}
 
-		@Test
-		void initUpdateForm() throws Exception {
-			mockMvc.perform(get("/owners/{ownerId}/pets/{petId}/edit", TEST_OWNER_ID, TEST_PET_ID))
-				.andExpect(status().isOk())
-				.andExpect(model().attributeExists("pet"))
-				.andExpect(view().name("pets/createOrUpdatePetForm"));
-		}
-
 	}
 
 	@Test
+	void initUpdateFormAnonymousRedirectsToLogin() throws Exception {
+		mockMvc.perform(get("/owners/{ownerId}/pets/{petId}/edit", TEST_OWNER_ID, TEST_PET_ID))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(view().name("redirect:/login"));
+	}
+
+	@Test
+	@WithMockUser(roles = "RECEPTIONIST")
+	void initUpdateFormReceptionistOk() throws Exception {
+		mockMvc.perform(get("/owners/{ownerId}/pets/{petId}/edit", TEST_OWNER_ID, TEST_PET_ID))
+			.andExpect(status().isOk())
+			.andExpect(model().attributeExists("pet"))
+			.andExpect(view().name("pets/createOrUpdatePetForm"));
+	}
+
+	@Test
+	@WithMockUser(roles = "VET")
+	void initUpdateFormVetForbidden() throws Exception {
+		mockMvc.perform(get("/owners/{ownerId}/pets/{petId}/edit", TEST_OWNER_ID, TEST_PET_ID))
+			.andExpect(status().isForbidden());
+	}
+
+	@Test
+	@WithMockUser(roles = "RECEPTIONIST")
 	void processUpdateFormSuccess() throws Exception {
 		mockMvc
-			.perform(post("/owners/{ownerId}/pets/{petId}/edit", TEST_OWNER_ID, TEST_PET_ID).param("name", "Betty")
+			.perform(post("/owners/{ownerId}/pets/{petId}/edit", TEST_OWNER_ID, TEST_PET_ID).with(csrf())
+				.param("name", "Betty")
 				.param("type", "hamster")
 				.param("birthDate", "2015-02-12"))
 			.andExpect(status().is3xxRedirection())
@@ -199,12 +244,14 @@ class PetControllerTests {
 	}
 
 	@Test
+	@WithMockUser(roles = "RECEPTIONIST")
 	void processUpdateFormWithSameName() throws Exception {
-		mockMvc.perform(post("/owners/{ownerId}/pets/{petId}/edit", TEST_OWNER_ID, TEST_PET_ID).param("name", "petty") // same
-																														// name
-																														// as
-																														// existing
-																														// pet
+		mockMvc.perform(post("/owners/{ownerId}/pets/{petId}/edit", TEST_OWNER_ID, TEST_PET_ID).with(csrf())
+			.param("name", "petty") // same
+									// name
+									// as
+									// existing
+									// pet
 			.param("type", "hamster")
 			.param("birthDate", "2015-02-12"))
 			.andExpect(status().is3xxRedirection())
@@ -215,9 +262,10 @@ class PetControllerTests {
 	class ProcessUpdateFormHasErrors {
 
 		@Test
+		@WithMockUser(roles = "RECEPTIONIST")
 		void processUpdateFormWithDuplicateName() throws Exception {
 			mockMvc
-				.perform(post("/owners/{ownerId}/pets/{petId}/edit", TEST_OWNER_ID, TEST_PET_ID + 1)
+				.perform(post("/owners/{ownerId}/pets/{petId}/edit", TEST_OWNER_ID, TEST_PET_ID + 1).with(csrf())
 					.param("name", "petty")
 					.param("type", "hamster")
 					.param("birthDate", "2015-02-12"))
@@ -230,9 +278,11 @@ class PetControllerTests {
 		}
 
 		@Test
+		@WithMockUser(roles = "RECEPTIONIST")
 		void processUpdateFormWithInvalidBirthDate() throws Exception {
 			mockMvc
-				.perform(post("/owners/{ownerId}/pets/{petId}/edit", TEST_OWNER_ID, TEST_PET_ID).param("name", " ")
+				.perform(post("/owners/{ownerId}/pets/{petId}/edit", TEST_OWNER_ID, TEST_PET_ID).with(csrf())
+					.param("name", " ")
 					.param("birthDate", "2015/02/12"))
 				.andExpect(model().attributeHasNoErrors("owner"))
 				.andExpect(model().attributeHasErrors("pet"))
@@ -242,9 +292,11 @@ class PetControllerTests {
 		}
 
 		@Test
+		@WithMockUser(roles = "RECEPTIONIST")
 		void processUpdateFormWithBlankName() throws Exception {
 			mockMvc
-				.perform(post("/owners/{ownerId}/pets/{petId}/edit", TEST_OWNER_ID, TEST_PET_ID).param("name", "  ")
+				.perform(post("/owners/{ownerId}/pets/{petId}/edit", TEST_OWNER_ID, TEST_PET_ID).with(csrf())
+					.param("name", "  ")
 					.param("birthDate", "2015-02-12"))
 				.andExpect(model().attributeHasNoErrors("owner"))
 				.andExpect(model().attributeHasErrors("pet"))
@@ -254,11 +306,13 @@ class PetControllerTests {
 		}
 
 		@Test
+		@WithMockUser(roles = "RECEPTIONIST")
 		void processUpdateFormWithDataIntegrityViolation() throws Exception {
 			given(owners.saveAndFlush(any(Owner.class)))
 				.willThrow(new DataIntegrityViolationException("Duplicate key: unique_owner_pet_name"));
 			mockMvc
-				.perform(post("/owners/{ownerId}/pets/{petId}/edit", TEST_OWNER_ID, TEST_PET_ID).param("name", "Betty")
+				.perform(post("/owners/{ownerId}/pets/{petId}/edit", TEST_OWNER_ID, TEST_PET_ID).with(csrf())
+					.param("name", "Betty")
 					.param("type", "hamster")
 					.param("birthDate", "2015-02-12"))
 				.andExpect(model().attributeHasNoErrors("owner"))
