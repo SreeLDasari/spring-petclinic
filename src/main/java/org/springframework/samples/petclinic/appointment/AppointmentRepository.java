@@ -51,7 +51,15 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Intege
 	List<Appointment> findPotentialConflicts(@Param("vetId") int vetId, @Param("windowStart") LocalDateTime windowStart,
 			@Param("windowEnd") LocalDateTime windowEnd, @Param("cancelledStatus") AppointmentStatus cancelledStatus);
 
-	@Query("select a from Appointment a where a.vet.id = :vetId and a.status <> :cancelledStatus and a.startDateTime >= :dayStart and a.startDateTime < :dayEnd order by a.startDateTime")
+	@Query("""
+		select a
+		from Appointment a
+		where a.vet.id = :vetId
+		  and a.status <> :cancelledStatus
+		  and a.startDateTime >= :dayStart
+		  and a.startDateTime < :dayEnd
+		order by a.startDateTime
+		""")
 	List<Appointment> findForVetInWindow(@Param("vetId") int vetId, @Param("dayStart") LocalDateTime dayStart,
 			@Param("dayEnd") LocalDateTime dayEnd, @Param("cancelledStatus") AppointmentStatus cancelledStatus);
 
