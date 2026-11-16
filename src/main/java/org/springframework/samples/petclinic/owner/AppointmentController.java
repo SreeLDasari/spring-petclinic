@@ -187,11 +187,22 @@ class AppointmentController {
 	}
 
 	private String redirectToOwner(Visit visit) {
-		// pet is not mapped on Visit entity, but it is available via the backref in DB.
-		// We rely on visit having been loaded via VisitRepository which does not include
-		// Pet. Since this fork models visits via Pet aggregate, simplest is to redirect
-		// to owners page without deep link.
-		return "redirect:/owners";
+		if (visit == null) {
+			return "redirect:/owners";
+		}
+		Pet pet = visit.getPet();
+		if (pet == null) {
+			return "redirect:/owners";
+		}
+		Owner owner = pet.getOwner();
+		if (owner == null) {
+			return "redirect:/owners";
+		}
+		Integer ownerId = owner.getId();
+		if (ownerId == null) {
+			return "redirect:/owners";
+		}
+		return "redirect:/owners/" + ownerId;
 	}
 
 }
