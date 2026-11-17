@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'appointments')}">
+
+<body>
+	<div class="container xd-container">
+		<h2 th:text="${isNew} ? 'Schedule Appointment' : 'Reschedule Appointment'">Schedule Appointment</h2>
+
+		<div class="row">
+			<div class="col-md-12">
+				<div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}">
+					<p th:each="e : ${#fields.globalErrors()}" th:text="${e}">Validation error</p>
+				</div>
+			</div>
+		</div>
+
+		<div class="row" th:if="${pet != null}">
+			<div class="col-md-12">
+				<h3>Pet</h3>
+				<table class="table table-striped">
+					<tr>
+						<th>Name</th>
+						<td th:text="${pet.name}">Pet Name</td>
+						<th>Owner</th>
+						<td th:text="${owner != null ? owner.firstName + ' ' + owner.lastName : ''}">Owner</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+
+		<form th:object="${appointmentForm}" method="post" class="form-horizontal" id="add-appointment-form">
+			<div class="form-group has-feedback">
+				<div class="row">
+					<div class="col-md-4">
+						<label class="control-label" for="vetId">Vet</label>
+						<select th:field="*{vetId}" class="form-control" required="required">
+							<option value="" th:text="'-- select --'">-- select --</option>
+							<option th:each="vet : ${vets}" th:value="${vet.id}"
+								th:text="${vet.firstName + ' ' + vet.lastName}">Vet Name</option>
+						</select>
+						<span class="help-block" th:errors="*{vetId}">vet error</span>
+					</div>
+
+					<div class="col-md-4">
+						<label class="control-label" for="startDateTime">Date/Time</label>
+						<input class="form-control" type="datetime-local" th:field="*{startDateTime}" required="required" />
+						<span class="help-block" th:errors="*{startDateTime}">datetime error</span>
+					</div>
+
+					<div class="col-md-4">
+						<label class="control-label" for="durationMinutes">Duration (minutes)</label>
+						<input class="form-control" type="number" min="5" th:field="*{durationMinutes}" />
+						<span class="help-block" th:errors="*{durationMinutes}">duration error</span>
+					</div>
+				</div>
+			</div>
+
+			<div class="form-group">
+				<label class="control-label" for="reason">Reason / Notes</label>
+				<textarea class="form-control" rows="3" th:field="*{reason}"></textarea>
+				<span class="help-block" th:errors="*{reason}">reason error</span>
+			</div>
+
+			<div class="form-group">
+				<button class="btn btn-primary" type="submit" th:text="${isNew} ? 'Save Appointment' : 'Save Changes'">Save</button>
+				<a class="btn btn-default" th:if="${owner != null}" th:href="@{/owners/{ownerId}(ownerId=${owner.id})}">Cancel</a>
+				<a class="btn btn-default" th:if="${owner == null}" th:href="@{/appointments}">Cancel</a>
+			</div>
+		</form>
+	</div>
+</body>
+
+</html>
