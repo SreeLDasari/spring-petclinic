@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+
+<html xmlns:th="https://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'owners')}">
+
+<body>
+
+  <h2 th:text="${reschedule} ? #{rescheduleAppointment} : #{scheduleAppointment}">Schedule Appointment</h2>
+
+  <b th:text="#{pet}">Pet</b>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th th:text="#{name}">Name</th>
+        <th th:text="#{birthDate}">Birth Date</th>
+        <th th:text="#{type}">Type</th>
+        <th th:text="#{owner}">Owner</th>
+      </tr>
+    </thead>
+    <tr>
+      <td th:text="${pet.name}"></td>
+      <td th:text="${#temporals.format(pet.birthDate, 'yyyy-MM-dd')}"></td>
+      <td th:text="${pet.type}"></td>
+      <td th:text="${owner.firstName + ' ' + owner.lastName}"></td>
+    </tr>
+  </table>
+
+  <p th:text="#{appointment.duration(${durationMinutes})}">Each appointment lasts 30 minutes</p>
+
+  <form th:object="${appointmentForm}" class="form-horizontal" method="post">
+    <div class="form-group has-feedback">
+      <div th:with="valid=${!#fields.hasErrors('vetId')}" th:class="${'form-group' + (valid ? '' : ' has-error')}">
+        <label for="vetId" class="col-sm-2 control-label" th:text="#{vet}">Veterinarian</label>
+        <div class="col-sm-10">
+          <select th:field="*{vetId}" class="form-control">
+            <option value="" th:text="#{selectVet}">Select a veterinarian</option>
+            <option th:each="v : ${vets}" th:value="${v.id}" th:text="${v.firstName + ' ' + v.lastName}">vet</option>
+          </select>
+          <span th:if="${!valid}" class="help-inline" th:errors="*{vetId}" th:text="#{error}">Error</span>
+        </div>
+      </div>
+      <input th:replace="~{fragments/inputField :: input (#{date}, 'date', 'date')}" />
+      <input th:replace="~{fragments/inputField :: input (#{time}, 'time', 'time')}" />
+      <input th:replace="~{fragments/inputField :: input (#{reason}, 'description', 'text')}" />
+    </div>
+
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <button class="btn btn-primary" type="submit"
+          th:text="${reschedule} ? #{rescheduleAppointment} : #{scheduleAppointment}">Schedule Appointment</button>
+        <a class="btn btn-default" th:href="@{/owners/{ownerId}/pets/{petId}/appointments(ownerId=${owner.id},petId=${pet.id})}"
+          th:text="#{back}">Back</a>
+      </div>
+    </div>
+  </form>
+
+</body>
+
+</html>
