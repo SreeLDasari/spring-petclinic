@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'appointments')}">
+
+<body>
+	<div class="container xd-container">
+		<h2>Upcoming Appointments</h2>
+
+		<form method="get" th:action="@{/appointments}" class="form-horizontal">
+			<div class="table-filter">
+				<div class="row">
+					<div class="col-md-3">
+						<label for="from">From</label>
+						<input id="from" name="from" type="date" class="form-control" th:value="${from}" />
+					</div>
+					<div class="col-md-3">
+						<label for="to">To</label>
+						<input id="to" name="to" type="date" class="form-control" th:value="${to}" />
+					</div>
+					<div class="col-md-3">
+						<label for="vetId">Vet</label>
+						<select id="vetId" name="vetId" class="form-control">
+							<option value="" th:selected="${vetId == null}">All</option>
+							<option th:each="vet : ${vets}" th:value="${vet.id}" th:text="${vet.firstName + ' ' + vet.lastName}"
+								th:selected="${vetId != null and vetId == vet.id}">Vet</option>
+						</select>
+					</div>
+					<div class="col-md-3">
+						<label for="status">Status</label>
+						<select id="status" name="status" class="form-control">
+							<option th:each="s : ${statuses}" th:value="${s}" th:text="${s}"
+								th:selected="${status == s}">SCHEDULED</option>
+						</select>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-md-12">
+						<button type="submit" class="btn btn-primary">Apply Filters</button>
+					</div>
+				</div>
+			</div>
+		</form>
+
+		<table class="table table-striped" th:if="${appointments != null and !appointments.isEmpty()}">
+			<thead>
+				<tr>
+					<th>Date/Time</th>
+					<th>Duration</th>
+					<th>Vet</th>
+					<th>Pet</th>
+					<th>Owner</th>
+					<th>Status</th>
+					<th class="action-column">Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="appt : ${appointments}">
+					<td th:text="${#temporals.format(appt.startDateTime, 'yyyy-MM-dd HH:mm')}">2026-01-01 10:00</td>
+					<td th:text="${appt.durationMinutes + ' min'}">30 min</td>
+					<td th:text="${appt.vet.firstName + ' ' + appt.vet.lastName}">Vet</td>
+					<td>
+						<a th:href="@{/owners/{ownerId}(ownerId=${appt.pet.owner.id})}" th:text="${appt.pet.name}">Pet</a>
+					</td>
+					<td th:text="${appt.pet.owner.firstName + ' ' + appt.pet.owner.lastName}">Owner</td>
+					<td th:text="${appt.status}">SCHEDULED</td>
+					<td class="action-column">
+						<a class="btn btn-default btn-xs" th:href="@{/appointments/{appointmentId}/edit(appointmentId=${appt.id})}">Edit</a>
+						<form th:if="${appt.status.name() == 'SCHEDULED'}" th:action="@{/appointments/{appointmentId}/cancel(appointmentId=${appt.id})}" method="post" style="display:inline">
+							<button class="btn btn-danger btn-xs" type="submit">Cancel</button>
+						</form>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<div class="alert alert-info" th:if="${appointments == null or appointments.isEmpty()}">
+			No appointments match your filters.
+		</div>
+	</div>
+</body>
+
+</html>
