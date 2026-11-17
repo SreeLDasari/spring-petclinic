@@ -69,8 +69,62 @@
             <td th:text="${visit?.description}"></td>
           </tr>
           <tr>
-            <td><a th:href="@{__${owner.id}__/pets/__${pet.id}__/edit}" th:text="#{editPet}">Edit Pet</a></td>
-            <td><a th:href="@{__${owner.id}__/pets/__${pet.id}__/visits/new}" th:text="#{addVisit}">Add Visit</a></td>
+            <td>
+              <a th:href="@{__${owner.id}__/pets/__${pet.id}__/edit}" th:text="#{editPet}">Edit Pet</a>
+            </td>
+            <td>
+              <a th:href="@{__${owner.id}__/pets/__${pet.id}__/visits/new}" th:text="#{addVisit}">Add Visit</a>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2">
+              <a th:href="@{/owners/{ownerId}/pets/{petId}/appointments/new(ownerId=${owner.id},petId=${pet.id})}">
+                Schedule Appointment
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2">
+              <div style="margin-top: 10px;">
+                <strong>Upcoming Appointments</strong>
+              </div>
+
+              <table class="table table-condensed" style="margin-top: 5px;">
+                <thead>
+                  <tr>
+                    <th>Date/Time</th>
+                    <th>Duration</th>
+                    <th>Vet</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr th:if="${pet.appointments == null or #lists.isEmpty(pet.appointments)}">
+                    <td colspan="4"><em>No upcoming appointments.</em></td>
+                  </tr>
+
+                  <tr th:each="appt : ${pet.appointments}"
+                      th:if="${appt.status == null or appt.status.toString() == 'SCHEDULED'}">
+                    <td th:text="${appt.startDateTime != null ? #temporals.format(appt.startDateTime, 'yyyy-MM-dd HH:mm') : (appt.dateTime != null ? #temporals.format(appt.dateTime, 'yyyy-MM-dd HH:mm') : (appt.date != null ? #temporals.format(appt.date, 'yyyy-MM-dd') : ''))}">
+                      2024-01-01 10:00
+                    </td>
+                    <td th:text="${appt.duration != null ? appt.duration : (appt.durationMinutes != null ? appt.durationMinutes + ' min' : '')}">
+                      30 min
+                    </td>
+                    <td th:text="${appt.vet != null ? (appt.vet.firstName != null ? appt.vet.firstName + ' ' + appt.vet.lastName : appt.vet) : (appt.vetName != null ? appt.vetName : '')}">
+                      Dr. Vet
+                    </td>
+                    <td>
+                      <a th:href="@{/appointments/{id}/edit(id=${appt.id})}">Edit</a>
+                      &nbsp;|&nbsp;
+                      <form th:action="@{/appointments/{id}/cancel(id=${appt.id})}" method="post" style="display:inline;">
+                        <button type="submit" class="btn btn-link p-0" style="padding: 0; border: 0; vertical-align: baseline;">Cancel</button>
+                      </form>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
           </tr>
         </table>
       </td>
@@ -81,8 +135,14 @@
     // Function to hide the success and error messages after 3 seconds
     function hideMessages() {
       setTimeout(function () {
-        document.getElementById("success-message").style.display = "none";
-        document.getElementById("error-message").style.display = "none";
+        var successMessage = document.getElementById("success-message");
+        var errorMessage = document.getElementById("error-message");
+        if (successMessage) {
+          successMessage.style.display = "none";
+        }
+        if (errorMessage) {
+          errorMessage.style.display = "none";
+        }
       }, 3000); // 3000 milliseconds (3 seconds)
     }
 
