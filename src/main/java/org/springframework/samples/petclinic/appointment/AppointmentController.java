@@ -21,6 +21,8 @@ import java.time.LocalTime;
 import java.util.Collection;
 import java.util.Optional;
 
+import jakarta.validation.Valid;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.samples.petclinic.owner.Owner;
 import org.springframework.samples.petclinic.owner.OwnerRepository;
 import org.springframework.samples.petclinic.owner.Pet;
@@ -35,11 +37,8 @@ import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import jakarta.validation.Valid;
 
 @Controller
 class AppointmentController {
@@ -110,13 +109,14 @@ class AppointmentController {
 			return VIEW_APPOINTMENTS_FORM;
 		}
 
-		dredirectAttributes.addFlashAttribute("message", "Appointment scheduled");
+		redirectAttributes.addFlashAttribute("message", "Appointment scheduled");
 		return "redirect:/appointments";
 	}
 
 	@GetMapping("/appointments")
-	public String listAppointments(@RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate from,
-			@RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate to,
+	public String listAppointments(
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
 			@RequestParam(required = false) Integer vetId, @RequestParam(required = false) AppointmentStatus status,
 			Model model) {
 
@@ -149,6 +149,11 @@ class AppointmentController {
 		form.setDurationMinutes(appointment.getDurationMinutes());
 		form.setReason(appointment.getReason());
 
+		Owner owner = resolveOwnerFromAppointment(appointment);
+		Pet pet = appointment.getPet();
+
+		model.addAttribute("owner", owner);
+		model.addAttribute("pet", pet);
 		model.addAttribute("appointment", appointment);
 		model.addAttribute("appointmentForm", form);
 		model.addAttribute("isNew", false);
@@ -163,6 +168,11 @@ class AppointmentController {
 		Appointment appointment = loadAppointment(appointmentId);
 
 		if (result.hasErrors()) {
+			Owner owner = resolveOwnerFromAppointment(appointment);
+			Pet pet = appointment.getPet();
+
+			model.addAttribute("owner", owner);
+			model.addAttribute("pet", pet);
 			model.addAttribute("appointment", appointment);
 			model.addAttribute("isNew", false);
 			return VIEW_APPOINTMENTS_FORM;
@@ -173,7 +183,12 @@ class AppointmentController {
 					form.getDurationMinutes(), form.getReason());
 		}
 		catch (VetDoubleBookedException ex) {
+			Owner owner = resolveOwnerFromAppointment(appointment);
+			Pet pet = appointment.getPet();
+
 			result.reject("vetBooked", ex.getMessage());
+			model.addAttribute("owner", owner);
+			model.addAttribute("pet", pet);
 			model.addAttribute("appointment", appointment);
 			model.addAttribute("isNew", false);
 			return VIEW_APPOINTMENTS_FORM;
@@ -204,12 +219,26 @@ class AppointmentController {
 	}
 
 	private Appointment loadAppointment(int appointmentId) {
-		return this.appointmentService.findAppointments(LocalDateTime.MIN, LocalDateTime.MAX, null,
-				AppointmentStatus.SCHEDULED)
-			.stream()
-			.filter((a) -> a.getId() == appointmentId)
-			.findFirst()
+		return this.appointmentService.findAppointmentById(appointmentId)
 			.orElseThrow(() -> new IllegalArgumentException("Appointment not found with id: " + appointmentId));
+	}
+
+	private Owner resolveOwnerFromAppointment(Appointment appointment) {
+		Pet pet = appointment.getPet();
+		if (pet == null) {
+			throw new IllegalStateException("Appointment is missing pet reference. Appointment id: " + appointment.getId());
+		}
+
+		Owner owner = pet.getOwner();
+		if (owner != null) {
+			return owner;
+		}
+
+		if (pet.getOwnerId() != null) {
+			return loadOwner(pet.getOwnerId());
+		}
+
+		throw new IllegalStateException("Unable to resolve owner for appointment id: " + appointment.getId());
 	}
 
 }
