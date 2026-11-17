@@ -10,6 +10,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="shortcut icon" type="image/x-icon" th:href="@{/resources/images/favicon.png}">
   <title th:text="#{layoutTitle}">PetClinic :: a Spring Framework demonstration</title>
+
+  <link th:href="@{/webjars/bootstrap/dist/css/bootstrap.min.css}" rel="stylesheet">
   <link th:href="@{/webjars/font-awesome/css/font-awesome.min.css}" rel="stylesheet">
   <link rel="stylesheet" th:href="@{/resources/css/petclinic.css}" />
 
@@ -20,15 +22,18 @@
   <nav class="navbar navbar-expand-lg navbar-dark" role="navigation">
     <div class="container-fluid">
       <a class="navbar-brand" th:href="@{/}"><span></span></a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-navbar">
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-navbar"
+        aria-controls="main-navbar" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
-      <div class="collapse navbar-collapse" id="main-navbar" style>
+
+      <div class="collapse navbar-collapse" id="main-navbar">
 
         <ul class="navbar-nav me-auto mb-2 mb-lg-0" th:remove="all">
 
-          <li th:fragment="menuItem (link,active,title,glyph,text)" th:class="nav-item">
-            <a th:class="${active==menu ? 'nav-link active' : 'nav-link'}" th:href="@{__${link}__}" th:title="${title}">
+          <li th:fragment="menuItem (link,active,title,glyph,text)" class="nav-item">
+            <a th:class="${active==menu ? 'nav-link active' : 'nav-link'}" th:href="@{__${link}__}"
+              th:title="${title}">
               <span th:class="'fa fa-'+${glyph}" class="fa fa-home"></span>
               <span th:text="${text}">Template</span>
             </a>
@@ -36,33 +41,53 @@
 
         </ul>
 
-        <ul class="nav navbar-nav me-auto">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
 
-          <li th:replace="~{::menuItem ('/','home','home page','home',#{home})}">
-            <span class="fa fa-home" aria-hidden="true"></span>
-            <span th:text="#{home}">Home</span>
+          <li class="nav-item" th:replace="~{::menuItem ('/','home','home page','home',#{home})}">
+            <a class="nav-link" th:href="@{/}">
+              <span class="fa fa-home" aria-hidden="true"></span>
+              <span th:text="#{home}">Home</span>
+            </a>
           </li>
 
-          <li th:replace="~{::menuItem ('/owners/find','owners','find owners','search',#{findOwners})}">
-            <span class="fa fa-search" aria-hidden="true"></span>
-            <span th:text="#{findOwners}">Find owners</span>
+          <li class="nav-item" th:replace="~{::menuItem ('/owners/find','owners','find owners','search',#{findOwners})}">
+            <a class="nav-link" th:href="@{/owners/find}">
+              <span class="fa fa-search" aria-hidden="true"></span>
+              <span th:text="#{findOwners}">Find owners</span>
+            </a>
           </li>
 
-          <li th:replace="~{::menuItem ('/vets.html','vets','veterinarians','th-list',#{vets})}">
-            <span class="fa fa-th-list" aria-hidden="true"></span>
-            <span th:text="#{vets}">Veterinarians</span>
+          <li class="nav-item" th:replace="~{::menuItem ('/vets.html','vets','veterinarians','th-list',#{vets})}">
+            <a class="nav-link" th:href="@{/vets.html}">
+              <span class="fa fa-th-list" aria-hidden="true"></span>
+              <span th:text="#{vets}">Veterinarians</span>
+            </a>
           </li>
 
-          <li
+          <li class="nav-item"
+            th:replace="~{::menuItem ('/appointments','appointments','upcoming appointments','calendar',#{appointments})}">
+            <a class="nav-link" th:href="@{/appointments}">
+              <span class="fa fa-calendar" aria-hidden="true"></span>
+              <span th:text="#{appointments}">Appointments</span>
+            </a>
+          </li>
+
+          <!-- Optional error link -->
+          <li class="nav-item"
+            th:if="${false}"
             th:replace="~{::menuItem ('/oups','error','trigger a RuntimeException to see how it is handled','exclamation-triangle',#{error})}">
-            <span class="fa exclamation-triangle" aria-hidden="true"></span>
-            <span th:text="#{error}">Error</span>
+            <a class="nav-link" th:href="@{/oups}">
+              <span class="fa fa-exclamation-triangle" aria-hidden="true"></span>
+              <span th:text="#{error}">Error</span>
+            </a>
           </li>
 
         </ul>
+
       </div>
     </div>
   </nav>
+
   <div class="container-fluid">
     <div class="container xd-container">
 
@@ -70,6 +95,7 @@
 
       <br />
       <br />
+
       <div class="container">
         <div class="row">
           <div class="col-12 text-center">
@@ -78,6 +104,7 @@
           </div>
         </div>
       </div>
+
     </div>
   </div>
 
