@@ -42,6 +42,12 @@ public class AppointmentService {
 		this.vets = vets;
 	}
 
+	@Transactional(readOnly = true)
+	public Appointment findAppointmentById(int appointmentId) {
+		return this.appointments.findById(appointmentId)
+			.orElseThrow(() -> new IllegalArgumentException("Appointment not found with id: " + appointmentId));
+	}
+
 	@Transactional
 	public Appointment scheduleAppointment(int ownerId, int petId, int vetId, LocalDateTime startDateTime,
 			int durationMinutes, String reason) {
