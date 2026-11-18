@@ -66,6 +66,12 @@ public class AppointmentService {
 	}
 
 	@Transactional(readOnly = true)
+	public Owner findOwnerByPetId(int petId) {
+		return this.ownerRepository.findByPetsId(petId)
+			.orElseThrow(() -> new IllegalArgumentException("Owner not found for pet id: " + petId));
+	}
+
+	@Transactional(readOnly = true)
 	public Pet findPet(Owner owner, int petId) {
 		Pet pet = owner.getPet(petId);
 		if (pet == null) {
@@ -167,6 +173,23 @@ public class AppointmentService {
 			current = current.plusMinutes(slotMinutes);
 		}
 		return slots;
+	}
+
+	static String buildOwnerDisplayName(Owner owner) {
+		Assert.notNull(owner, "owner must not be null");
+		String firstName = owner.getFirstName();
+		String lastName = owner.getLastName();
+
+		if (firstName == null && lastName == null) {
+			return "";
+		}
+		if (firstName == null) {
+			return lastName;
+		}
+		if (lastName == null) {
+			return firstName;
+		}
+		return firstName + " " + lastName;
 	}
 
 }
