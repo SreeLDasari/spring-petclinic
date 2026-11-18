@@ -45,11 +45,8 @@ class AppointmentController {
 
 	private final AppointmentService appointmentService;
 
-	private final AppointmentRepository appointmentRepository;
-
 	public AppointmentController(AppointmentService appointmentService, AppointmentRepository appointmentRepository) {
 		this.appointmentService = appointmentService;
-		this.appointmentRepository = appointmentRepository;
 	}
 
 	@InitBinder("appointmentForm")
@@ -65,8 +62,7 @@ class AppointmentController {
 	@GetMapping("/owners/{ownerId}/pets/{petId}/appointments/new")
 	public String initCreateForm(@PathVariable("ownerId") int ownerId, @PathVariable("petId") int petId,
 			@RequestParam(name = "appointmentDate", required = false) LocalDate appointmentDate,
-			@RequestParam(name = "vetId", required = false) Integer vetId,
-			Model model) {
+			@RequestParam(name = "vetId", required = false) Integer vetId, Model model) {
 
 		Owner owner = this.appointmentService.findOwner(ownerId);
 		Pet pet = this.appointmentService.findPet(owner, petId);
@@ -119,13 +115,14 @@ class AppointmentController {
 		return "redirect:/owners/" + ownerId;
 	}
 
-	@GetMapping("/appointments/{appointmentId}/edit")
-	public String initUpdateForm(@PathVariable("appointmentId") int appointmentId,
+	@GetMapping("/owners/{ownerId}/appointments/{appointmentId}/edit")
+	public String initUpdateForm(@PathVariable("ownerId") int ownerId, @PathVariable("appointmentId") int appointmentId,
 			@RequestParam(name = "appointmentDate", required = false) LocalDate appointmentDate,
 			@RequestParam(name = "vetId", required = false) Integer vetId, Model model) {
 
 		Appointment appointment = this.appointmentService.findById(appointmentId);
-		Owner owner = appointment.getPet().getOwner();
+		Owner owner = this.appointmentService.findOwner(ownerId);
+		validateAppointmentBelongsToOwner(appointment, owner);
 		Pet pet = appointment.getPet();
 
 		AppointmentForm form = new AppointmentForm();
@@ -142,13 +139,14 @@ class AppointmentController {
 		return VIEWS_APPOINTMENT_FORM;
 	}
 
-	@PostMapping("/appointments/{appointmentId}")
-	public String processUpdateForm(@PathVariable("appointmentId") int appointmentId,
+	@PostMapping("/owners/{ownerId}/appointments/{appointmentId}")
+	public String processUpdateForm(@PathVariable("ownerId") int ownerId, @PathVariable("appointmentId") int appointmentId,
 			@Valid @ModelAttribute("appointmentForm") AppointmentForm form, BindingResult result, Model model,
 			RedirectAttributes redirectAttributes) {
 
 		Appointment existing = this.appointmentService.findById(appointmentId);
-		Owner owner = existing.getPet().getOwner();
+		Owner owner = this.appointmentService.findOwner(ownerId);
+		validateAppointmentBelongsToOwner(existing, owner);
 		Pet pet = existing.getPet();
 
 		model.addAttribute("appointment", existing);
@@ -181,12 +179,17 @@ class AppointmentController {
 		return "redirect:/owners/" + owner.getId();
 	}
 
-	@PostMapping("/appointments/{appointmentId}/cancel")
-	public String cancelAppointment(@PathVariable("appointmentId") int appointmentId,
+	@PostMapping("/owners/{ownerId}/appointments/{appointmentId}/cancel")
+	public String cancelAppointment(@PathVariable("ownerId") int ownerId, @PathVariable("appointmentId") int appointmentId,
 			RedirectAttributes redirectAttributes) {
+
+		Appointment existing = this.appointmentService.findById(appointmentId);
+		Owner owner = this.appointmentService.findOwner(ownerId);
+		validateAppointmentBelongsToOwner(existing, owner);
+
 		Appointment appointment = this.appointmentService.cancelAppointment(appointmentId);
 		redirectAttributes.addFlashAttribute("message", "Appointment cancelled");
-		return "redirect:/owners/" + appointment.getPet().getOwner().getId();
+		return "redirect:/owners/" + ownerId;
 	}
 
 	@GetMapping("/appointments")
@@ -218,6 +221,14 @@ class AppointmentController {
 			.filter(v -> vetId.equals(v.getId()))
 			.findFirst()
 			.orElseThrow(() -> new IllegalArgumentException("Vet not found with id: " + vetId));
+	}
+
+	private void validateAppointmentBelongsToOwner(Appointment appointment, Owner owner) {
+		boolean matches = owner.getPets().stream().anyMatch(p -> p.getId().equals(appointment.getPet().getId()));
+		if (!matches) {
+			throw new IllegalArgumentException(
+					"Appointment " + appointment.getId() + " does not belong to owner " + owner.getId());
+		}
 	}
 
 }
