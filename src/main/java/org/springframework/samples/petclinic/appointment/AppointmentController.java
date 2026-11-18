@@ -18,6 +18,7 @@ package org.springframework.samples.petclinic.appointment;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.samples.petclinic.owner.Owner;
 import org.springframework.samples.petclinic.owner.Pet;
@@ -199,7 +200,25 @@ class AppointmentController {
 		LocalDate effectiveDate = (scheduleDate != null ? scheduleDate : LocalDate.now());
 		model.addAttribute("scheduleDate", effectiveDate);
 		model.addAttribute("vetId", vetId);
-		model.addAttribute("appointments", this.appointmentService.findSchedule(effectiveDate, vetId));
+
+		List<Appointment> appointments = this.appointmentService.findSchedule(effectiveDate, vetId);
+		model.addAttribute("appointments", appointments);
+
+		List<ScheduleEntry> scheduleEntries = appointments.stream().map((appointment) -> {
+			Pet pet = appointment.getPet();
+			Integer petId = (pet != null ? pet.getId() : null);
+			Owner owner = (petId != null ? this.appointmentService.findOwnerByPetId(petId) : null);
+
+			Integer ownerId = (owner != null ? owner.getId() : null);
+			String ownerFullName = buildOwnerFullName(owner);
+			String petName = (pet != null ? pet.getName() : null);
+
+			return new ScheduleEntry(ownerId, ownerFullName, petName, appointment.getAppointmentTime(),
+					appointment.getStatus());
+		}).toList();
+
+		model.addAttribute("scheduleEntries", scheduleEntries);
+
 		return "appointments/appointmentList";
 	}
 
@@ -229,6 +248,87 @@ class AppointmentController {
 			throw new IllegalArgumentException(
 					"Appointment " + appointment.getId() + " does not belong to owner " + owner.getId());
 		}
+	}
+
+	private static String buildOwnerFullName(Owner owner) {
+		if (owner == null) {
+			return null;
+		}
+		String firstName = owner.getFirstName();
+		String lastName = owner.getLastName();
+		if (firstName == null && lastName == null) {
+			return null;
+		}
+		if (firstName == null) {
+			return lastName;
+		}
+		if (lastName == null) {
+			return firstName;
+		}
+		String fullName = (firstName + " " + lastName).trim();
+		return (fullName.isEmpty() ? null : fullName);
+	}
+
+	static final class ScheduleEntry {
+
+		private final Integer ownerId;
+
+		private final String ownerFullName;
+
+		private final String petName;
+
+		private final LocalTime appointmentTime;
+
+		private final AppointmentStatus status;
+
+		ScheduleEntry(Integer ownerId, String ownerFullName, String petName, LocalTime appointmentTime,
+				AppointmentStatus status) {
+			this.ownerId = ownerId;
+			this.ownerFullName = ownerFullName;
+			this.petName = petName;
+			this.appointmentTime = appointmentTime;
+			this.status = status;
+		}
+
+		public Integer getOwnerId() {
+			return this.ownerId;
+		}
+
+		public String getOwnerFullName() {
+			return this.ownerFullName;
+		}
+
+		public String getPetName() {
+			return this.petName;
+		}
+
+		public LocalTime getAppointmentTime() {
+			return this.appointmentTime;
+		}
+
+		public AppointmentStatus getStatus() {
+			return this.status;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) {
+				return true;
+			}
+			if (!(o instanceof ScheduleEntry other)) {
+				return false;
+			}
+			return Objects.equals(this.ownerId, other.ownerId) && Objects.equals(this.ownerFullName, other.ownerFullName)
+					&& Objects.equals(this.petName, other.petName)
+					&& Objects.equals(this.appointmentTime, other.appointmentTime)
+					&& this.status == other.status;
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(this.ownerId, this.ownerFullName, this.petName, this.appointmentTime, this.status);
+		}
+
 	}
 
 }
