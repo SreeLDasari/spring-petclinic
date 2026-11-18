@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'appointments')}">
+<body>
+
+	<h2 th:text="${appointment != null} ? 'Reschedule Appointment' : 'Schedule Appointment'">Schedule Appointment</h2>
+
+	<div class="row">
+		<div class="col-md-12">
+			<div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger" role="alert">
+				<p th:each="err : ${#fields.globalErrors()}" th:text="${err}">Error</p>
+			</div>
+
+			<table class="table table-striped" style="margin-bottom: 20px;">
+				<tr>
+					<th>Owner</th>
+					<td th:text="${owner.firstName + ' ' + owner.lastName}">Owner Name</td>
+				</tr>
+				<tr>
+					<th>Pet</th>
+					<td th:text="${pet.name}">Pet Name</td>
+				</tr>
+			</table>
+
+			<form th:object="${appointmentForm}"
+					th:action="${appointment != null} ? @{'/owners/' + ${owner.id} + '/appointments/' + ${appointment.id}} : @{'/owners/' + ${owner.id} + '/pets/' + ${pet.id} + '/appointments'}"
+					method="post" class="form-horizontal">
+
+				<div class="form-group has-feedback">
+					<label class="col-sm-2 control-label" for="appointmentDate">Date</label>
+					<div class="col-sm-10">
+						<input class="form-control" type="date" th:field="*{appointmentDate}" />
+						<span class="help-inline" th:errors="*{appointmentDate}">Date Error</span>
+					</div>
+				</div>
+
+				<div class="form-group has-feedback">
+					<label class="col-sm-2 control-label" for="vetId">Vet</label>
+					<div class="col-sm-10">
+						<select class="form-control" th:field="*{vetId}">
+							<option value="" th:text="'-- Select Vet --'">-- Select Vet --</option>
+							<option th:each="v : ${vets}" th:value="${v.id}" th:text="${v.firstName + ' ' + v.lastName}">Vet</option>
+						</select>
+						<span class="help-inline" th:errors="*{vetId}">Vet Error</span>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<div class="col-sm-offset-2 col-sm-10">
+						<button class="btn btn-default" type="submit" name="refresh" value="true" th:formaction="${appointment != null} ? @{'/owners/' + ${owner.id} + '/appointments/' + ${appointment.id} + '/edit'} : @{'/owners/' + ${owner.id} + '/pets/' + ${pet.id} + '/appointments/new'}">Refresh available slots</button>
+						<p class="help-block">Select Date and Vet then click "Refresh" to load available time slots.</p>
+					</div>
+				</div>
+
+				<div class="form-group has-feedback">
+					<label class="col-sm-2 control-label" for="appointmentTime">Time Slot</label>
+					<div class="col-sm-10">
+						<select class="form-control" th:field="*{appointmentTime}">
+							<option value="" th:text="'-- Select Slot --'">-- Select Slot --</option>
+							<option th:each="t : ${availableSlots}" th:value="${t}" th:text="${t}">09:00</option>
+						</select>
+						<span class="help-inline" th:errors="*{appointmentTime}">Time Error</span>
+					</div>
+				</div>
+
+				<div class="form-group has-feedback">
+					<label class="col-sm-2 control-label" for="reason">Reason (optional)</label>
+					<div class="col-sm-10">
+						<input class="form-control" type="text" th:field="*{reason}" />
+						<span class="help-inline" th:errors="*{reason}">Reason Error</span>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<div class="col-sm-offset-2 col-sm-10">
+						<button class="btn btn-primary" type="submit" th:text="${appointment != null} ? 'Update Appointment' : 'Book Appointment'">Book Appointment</button>
+						<a class="btn btn-default" th:href="@{'/owners/' + ${owner.id}}">Cancel</a>
+						<button th:if="${appointment != null and appointment.status.name() == 'BOOKED'}" class="btn btn-danger" type="submit" th:formaction="@{'/owners/' + ${owner.id} + '/appointments/' + ${appointment.id} + '/cancel'}">Cancel Appointment</button>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+
+</body>
+</html>

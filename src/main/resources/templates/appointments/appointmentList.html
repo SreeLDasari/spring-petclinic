@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'appointments')}">
+<body>
+
+	<h2>Schedule</h2>
+
+	<form method="get" th:action="@{/appointments}" class="form-inline" style="margin-bottom: 20px;">
+		<div class="form-group">
+			<label for="scheduleDate">Date</label>
+			<input class="form-control" type="date" id="scheduleDate" name="scheduleDate" th:value="${scheduleDate}" />
+		</div>
+		<div class="form-group" style="margin-left: 10px;">
+			<label for="vetId">Vet</label>
+			<select class="form-control" id="vetId" name="vetId">
+				<option value="" th:selected="${vetId == null}">All</option>
+				<option th:each="v : ${vets}" th:value="${v.id}" th:selected="${vetId != null and vetId == v.id}" th:text="${v.firstName + ' ' + v.lastName}">Vet</option>
+			</select>
+		</div>
+		<button class="btn btn-default" type="submit" style="margin-left: 10px;">Filter</button>
+	</form>
+
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th>Time</th>
+				<th>Pet</th>
+				<th>Owner</th>
+				<th>Status</th>
+				<th>Actions</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr th:each="e : ${scheduleEntries}">
+				<td th:text="${e.time}">09:00</td>
+				<td th:text="${e.petName}">Pet</td>
+				<td>
+					<a th:href="@{/owners/{ownerId}(ownerId=${e.ownerId})}" th:text="${e.ownerName}">Owner</a>
+				</td>
+				<td th:text="${e.status}">BOOKED</td>
+				<td>
+					<a class="btn btn-default btn-xs"
+					   th:href="@{/owners/{ownerId}/appointments/{appointmentId}/edit(ownerId=${e.ownerId},appointmentId=${e.appointmentId})}">Edit</a>
+
+					<form th:action="@{/owners/{ownerId}/appointments/{appointmentId}/cancel(ownerId=${e.ownerId},appointmentId=${e.appointmentId})}"
+						  method="post" style="display:inline;">
+						<button class="btn btn-danger btn-xs" type="submit">Cancel</button>
+					</form>
+				</td>
+			</tr>
+			<tr th:if="${#lists.isEmpty(scheduleEntries)}">
+				<td colspan="5">No appointments</td>
+			</tr>
+		</tbody>
+	</table>
+
+</body>
+</html>
