@@ -34,18 +34,17 @@
 				<td th:text="${e.time}">09:00</td>
 				<td th:text="${e.petName}">Pet</td>
 				<td>
-					<a th:if="${e.ownerId != null}" th:href="@{'/owners/' + ${e.ownerId}}" th:text="${e.ownerName}">Owner</a>
-					<span th:if="${e.ownerId == null}" th:text="${e.ownerName} ?: 'Unknown'">Unknown</span>
+					<a th:href="@{/owners/{ownerId}(ownerId=${e.ownerId})}" th:text="${e.ownerName}">Owner</a>
 				</td>
 				<td th:text="${e.status}">BOOKED</td>
 				<td>
-					<a class="btn btn-default btn-xs" th:if="${e.ownerId != null}" th:href="@{'/owners/' + ${e.ownerId} + '/appointments/' + ${e.appointmentId} + '/edit'}">Edit</a>
-					<a class="btn btn-default btn-xs" th:if="${e.ownerId == null}" href="#" onclick="return false;" style="pointer-events:none; opacity:0.65;">Edit</a>
+					<a class="btn btn-default btn-xs"
+					   th:href="@{/owners/{ownerId}/appointments/{appointmentId}/edit(ownerId=${e.ownerId},appointmentId=${e.appointmentId})}">Edit</a>
 
-					<form th:if="${e.status != null and e.status.name() == 'BOOKED' and e.ownerId != null}" th:action="@{'/owners/' + ${e.ownerId} + '/appointments/' + ${e.appointmentId} + '/cancel'}" method="post" style="display:inline;">
+					<form th:action="@{/owners/{ownerId}/appointments/{appointmentId}/cancel(ownerId=${e.ownerId},appointmentId=${e.appointmentId})}"
+						  method="post" style="display:inline;">
 						<button class="btn btn-danger btn-xs" type="submit">Cancel</button>
 					</form>
-					<button th:if="${e.status != null and e.status.name() == 'BOOKED' and e.ownerId == null}" class="btn btn-danger btn-xs" type="button" style="pointer-events:none; opacity:0.65;">Cancel</button>
 				</td>
 			</tr>
 			<tr th:if="${#lists.isEmpty(scheduleEntries)}">
