@@ -33,6 +33,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.samples.petclinic.appointment.AppointmentService;
+
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasItem;
@@ -70,6 +72,9 @@ class OwnerControllerTests {
 	@MockitoBean
 	private OwnerRepository owners;
 
+	@MockitoBean
+	private AppointmentService appointmentService;
+
 	private Owner george() {
 		Owner george = new Owner();
 		george.setId(TEST_OWNER_ID);
@@ -100,6 +105,8 @@ class OwnerControllerTests {
 		Visit visit = new Visit();
 		visit.setDate(LocalDate.now());
 		george.getPet("Max").getVisits().add(visit);
+
+		given(this.appointmentService.findAppointmentsForPet(any(), any())).willReturn(List.of());
 
 	}
 
