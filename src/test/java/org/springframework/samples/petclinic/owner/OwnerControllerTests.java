@@ -43,6 +43,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -106,7 +107,7 @@ class OwnerControllerTests {
 		visit.setDate(LocalDate.now());
 		george.getPet("Max").getVisits().add(visit);
 
-		given(this.appointmentService.findAppointmentsForPet(any(), any())).willReturn(List.of());
+		given(this.appointmentService.findAppointmentsForPet(anyInt())).willReturn(List.of());
 
 	}
 
