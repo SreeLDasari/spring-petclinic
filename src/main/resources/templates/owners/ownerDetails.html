@@ -72,6 +72,42 @@
             <td><a th:href="@{__${owner.id}__/pets/__${pet.id}__/edit}" th:text="#{editPet}">Edit Pet</a></td>
             <td><a th:href="@{__${owner.id}__/pets/__${pet.id}__/visits/new}" th:text="#{addVisit}">Add Visit</a></td>
           </tr>
+          <tr>
+            <td colspan="2">
+              <a th:href="@{/owners/{ownerId}/pets/{petId}/appointments/new(ownerId=${owner.id},petId=${pet.id})}"
+                 class="btn btn-primary btn-sm">
+                Schedule Appointment
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2">
+              <strong>Appointments</strong>
+              <table class="table table-striped table-condensed" style="margin-top: 10px;">
+                <thead>
+                  <tr>
+                    <th>Appointment Date</th>
+                    <th>Start Time</th>
+                    <th>Duration (min)</th>
+                    <th>Vet</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody th:with="appointments=${appointmentsByPetId != null ? appointmentsByPetId[pet.id] : null}">
+                  <tr th:if="${appointments == null or #lists.isEmpty(appointments)}">
+                    <td colspan="5">(none)</td>
+                  </tr>
+                  <tr th:each="appointment : ${appointments}">
+                    <td th:text="${#temporals.format(appointment.appointmentDate, 'yyyy-MM-dd')}"></td>
+                    <td th:text="${#temporals.format(appointment.startTime, 'HH:mm')}"></td>
+                    <td th:text="${appointment.durationMinutes}"></td>
+                    <td th:text="${appointment.vet.firstName + ' ' + appointment.vet.lastName}"></td>
+                    <td th:text="${appointment.status}"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
         </table>
       </td>
     </tr>
