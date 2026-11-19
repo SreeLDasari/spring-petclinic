@@ -1,3 +1,12 @@
+DROP TABLE IF EXISTS appointments;
+DROP TABLE IF EXISTS visits;
+DROP TABLE IF EXISTS vet_specialties;
+DROP TABLE IF EXISTS pets;
+DROP TABLE IF EXISTS owners;
+DROP TABLE IF EXISTS types;
+DROP TABLE IF EXISTS specialties;
+DROP TABLE IF EXISTS vets;
+
 CREATE TABLE IF NOT EXISTS vets (
   id INT(4) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   first_name VARCHAR(30),
@@ -53,4 +62,18 @@ CREATE TABLE IF NOT EXISTS visits (
   visit_date DATE,
   description VARCHAR(255),
   FOREIGN KEY (pet_id) REFERENCES pets(id)
+) engine=InnoDB;
+
+CREATE TABLE IF NOT EXISTS appointments (
+  id INT(4) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  appointment_date DATE NOT NULL,
+  start_time TIME NOT NULL,
+  duration_minutes INT NOT NULL,
+  status VARCHAR(20) NOT NULL,
+  reason VARCHAR(255),
+  pet_id INT(4) UNSIGNED NOT NULL,
+  vet_id INT(4) UNSIGNED NOT NULL,
+  INDEX idx_appt_vet_date_time (vet_id, appointment_date, start_time),
+  FOREIGN KEY (pet_id) REFERENCES pets(id),
+  FOREIGN KEY (vet_id) REFERENCES vets(id)
 ) engine=InnoDB;
