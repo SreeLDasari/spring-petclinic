@@ -18,6 +18,7 @@ package org.springframework.samples.petclinic.appointment;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Collection;
+import java.util.Objects;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.samples.petclinic.owner.OwnerRepository;
@@ -72,13 +73,24 @@ public class AppointmentService {
 			throw new IllegalArgumentException("Pet with id " + petId + " not found for owner with id " + ownerId + ".");
 		}
 
-		Vet vet = this.vets.findAll().stream().filter(v -> v.getId() != null && v.getId() == vetId).findFirst()
+		Vet vet = this.vets.findAll()
+			.stream()
+			.filter(v -> Objects.equals(v.getId(), vetId))
+			.findFirst()
 			.orElseThrow(() -> new IllegalArgumentException("Vet not found with id: " + vetId));
 
-		LocalTime endTime = startTime.plusMinutes(durationMinutes);
-		Collection<Appointment> overlaps = this.appointmentRepository.findOverlappingAppointments(vetId, appointmentDate,
-				startTime, endTime);
-		if (!overlaps.isEmpty()) {
+		LocalTime requestedEnd = startTime.plusMinutes(durationMinutes);
+
+		Collection<Appointment> sameDayAppointments = this.appointmentRepository
+			.findByVetIdAndAppointmentDateAndStatusNot(vetId, appointmentDate, AppointmentStatus.CANCELLED);
+
+		boolean hasOverlap = sameDayAppointments.stream().anyMatch(existing -> {
+			LocalTime existingStart = existing.getStartTime();
+			LocalTime existingEnd = existingStart.plusMinutes(existing.getDurationMinutes());
+			return existingStart.isBefore(requestedEnd) && existingEnd.isAfter(startTime);
+		});
+
+		if (hasOverlap) {
 			throw new AppointmentConflictException(
 					"Selected vet is not available at the chosen time. Please pick another slot.");
 		}
