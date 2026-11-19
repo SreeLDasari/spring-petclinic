@@ -15,9 +15,15 @@
  */
 package org.springframework.samples.petclinic.owner;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+
+import org.springframework.samples.petclinic.appointment.Appointment;
+import org.springframework.samples.petclinic.appointment.AppointmentService;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -52,8 +58,11 @@ class OwnerController {
 
 	private final OwnerRepository owners;
 
-	public OwnerController(OwnerRepository owners) {
+	private final AppointmentService appointmentService;
+
+	public OwnerController(OwnerRepository owners, AppointmentService appointmentService) {
 		this.owners = owners;
+		this.appointmentService = appointmentService;
 	}
 
 	@InitBinder
@@ -181,7 +190,13 @@ class OwnerController {
 		Optional<Owner> optionalOwner = this.owners.findById(ownerId);
 		Owner owner = optionalOwner.orElseThrow(() -> new IllegalArgumentException(
 				"Owner not found with id: " + ownerId + ". Please ensure the ID is correct "));
+
+		Map<Integer, Collection<Appointment>> appointmentsByPetId = new HashMap<>();
+		owner.getPets().forEach(pet -> appointmentsByPetId.put(pet.getId(),
+				this.appointmentService.findAppointmentsForPet(pet.getId())));
+
 		mav.addObject(owner);
+		mav.addObject("appointmentsByPetId", appointmentsByPetId);
 		return mav;
 	}
 

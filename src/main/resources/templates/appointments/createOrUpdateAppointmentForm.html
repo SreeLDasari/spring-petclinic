@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout (~{::body},'appointments')}">
+
+<body>
+  <h2>Schedule Appointment</h2>
+
+  <p>
+    Schedule Appointment for:
+    <strong th:text="${pet.name}">Pet Name</strong>
+    (Owner:
+    <strong th:text="${owner.firstName + ' ' + owner.lastName}">Owner Name</strong>)
+  </p>
+
+  <form th:object="${appointmentForm}" method="post" class="form-horizontal" id="add-appointment-form">
+
+    <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}">
+      <p th:each="err : ${#fields.globalErrors()}" th:text="${err}"></p>
+    </div>
+
+    <div class="mb-3">
+      <label for="vetId" class="form-label">Vet</label>
+      <select class="form-select" th:field="*{vetId}" id="vetId" aria-describedby="vetIdHelp">
+        <option value="" th:text="'-- Select --'"></option>
+        <option th:each="vet : ${vets}" th:value="${vet.id}" th:text="${vet.firstName + ' ' + vet.lastName}"></option>
+      </select>
+      <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('vetId')}" th:errors="*{vetId}">Vet Error</div>
+      <small id="vetIdHelp" class="form-text text-muted">Select a vet for this appointment.</small>
+    </div>
+
+    <div class="mb-3">
+      <label for="appointmentDate" class="form-label">Date</label>
+      <input class="form-control" th:field="*{appointmentDate}" id="appointmentDate" type="date"
+             th:attr="min=${minAppointmentDate}" aria-describedby="appointmentDateHelp" />
+      <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('appointmentDate')}" th:errors="*{appointmentDate}">Date Error</div>
+      <small id="appointmentDateHelp" class="form-text text-muted">Must be today or in the future.</small>
+    </div>
+
+    <div class="mb-3">
+      <label for="startTime" class="form-label">Time</label>
+      <input class="form-control" th:field="*{startTime}" id="startTime" type="time" aria-describedby="startTimeHelp" />
+      <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('startTime')}" th:errors="*{startTime}">Time Error</div>
+      <small id="startTimeHelp" class="form-text text-muted">Choose a start time.</small>
+    </div>
+
+    <div class="mb-3">
+      <label for="durationMinutes" class="form-label">Duration</label>
+      <select class="form-select" th:field="*{durationMinutes}" id="durationMinutes" aria-describedby="durationHelp">
+        <option th:each="d : ${appointmentDurations}" th:value="${d}" th:text="${d + ' minutes'}"></option>
+      </select>
+      <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('durationMinutes')}" th:errors="*{durationMinutes}">Duration Error</div>
+      <small id="durationHelp" class="form-text text-muted">Fixed duration options (MVP).</small>
+    </div>
+
+    <div class="mb-3">
+      <label for="reason" class="form-label">Reason</label>
+      <textarea class="form-control" th:field="*{reason}" id="reason" rows="3" aria-describedby="reasonHelp"></textarea>
+      <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('reason')}" th:errors="*{reason}">Reason Error</div>
+      <small id="reasonHelp" class="form-text text-muted">Optional notes (max 255 chars).</small>
+    </div>
+
+    <div class="form-group">
+      <button class="btn btn-primary" type="submit">Save Appointment</button>
+      <a class="btn btn-default" th:href="@{/owners/{ownerId}(ownerId=${owner.id})}">Cancel</a>
+    </div>
+
+  </form>
+</body>
+
+</html>
